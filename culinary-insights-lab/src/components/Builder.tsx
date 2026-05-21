@@ -45,6 +45,8 @@ export default function Builder() {
       defaultQ.text = "Nueva pregunta de escala";
       defaultQ.min = 1;
       defaultQ.max = 5;
+      defaultQ.minLabel = "Deficiente";
+      defaultQ.maxLabel = "Excelente";
     } else if (type === "choice") {
       defaultQ.text = "Nueva pregunta de opciones";
       defaultQ.options = ["Opción 1", "Opción 2"];
@@ -86,6 +88,14 @@ export default function Builder() {
 
   const updateScaleMin = (qId: string, minVal: number) => {
     setQuestions(questions.map(q => q.id === qId ? { ...q, min: minVal } : q));
+  };
+
+  const updateScaleMinLabel = (qId: string, minLabel: string) => {
+    setQuestions(questions.map(q => q.id === qId ? { ...q, minLabel } : q));
+  };
+
+  const updateScaleMaxLabel = (qId: string, maxLabel: string) => {
+    setQuestions(questions.map(q => q.id === qId ? { ...q, maxLabel } : q));
   };
 
   const handleSave = async () => {
@@ -210,9 +220,9 @@ export default function Builder() {
                   )}
 
                   {q.type === "scale" && (
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-end gap-3 bg-gray-100/60 p-3 rounded-xl border border-gray-200/50">
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Clasificación Mínima</label>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Mínimo</label>
                         <select 
                           value={q.min !== undefined ? q.min : 1}
                           onChange={e => updateScaleMin(q.id, Number(e.target.value))}
@@ -223,7 +233,7 @@ export default function Builder() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Clasificación Máxima</label>
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Máximo</label>
                         <select 
                           value={q.max !== undefined ? q.max : 5}
                           onChange={e => updateScaleMax(q.id, Number(e.target.value))}
@@ -232,6 +242,26 @@ export default function Builder() {
                           <option value="5">5</option>
                           <option value="10">10</option>
                         </select>
+                      </div>
+                      <div className="flex-1 min-w-[130px]">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Texto para el Mínimo ({q.min !== undefined ? q.min : 1})</label>
+                        <input 
+                          type="text"
+                          value={q.minLabel || ""}
+                          onChange={e => updateScaleMinLabel(q.id, e.target.value)}
+                          placeholder="Ej: Deficiente"
+                          className="w-full text-xs text-gray-700 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-[130px]">
+                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Texto para el Máximo ({q.max !== undefined ? q.max : 5})</label>
+                        <input 
+                          type="text"
+                          value={q.maxLabel || ""}
+                          onChange={e => updateScaleMaxLabel(q.id, e.target.value)}
+                          placeholder="Ej: Excelente"
+                          className="w-full text-xs text-gray-700 bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+                        />
                       </div>
                     </div>
                   )}

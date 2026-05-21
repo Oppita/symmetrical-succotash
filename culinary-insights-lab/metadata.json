@@ -1,0 +1,6 @@
+{
+  "name": "Monitor de Encuestas",
+  "description": "Aplicación para mostrar encuestas con código QR, consolidar información y graficar resultados con análisis por IA.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

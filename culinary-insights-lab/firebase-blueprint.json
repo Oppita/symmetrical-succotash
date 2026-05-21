@@ -1,0 +1,59 @@
+{
+  "entities": {
+    "Survey": {
+      "title": "Survey",
+      "description": "Definition of a custom-built survey structure with questions",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the survey"
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the survey"
+        },
+        "questions": {
+          "type": "array",
+          "description": "List of question definitions containing options and groupings"
+        }
+      },
+      "required": ["id", "title", "questions"]
+    },
+    "SurveyResponse": {
+      "title": "SurveyResponse",
+      "description": "A submitted survey response from a user",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier of the response"
+        },
+        "surveyId": {
+          "type": "string",
+          "description": "Reference to the survey ID"
+        },
+        "answers": {
+          "type": "object",
+          "description": "Key-value map of answer values"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of when the response was submitted"
+        }
+      },
+      "required": ["id", "surveyId", "answers", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/surveys/{surveyId}": {
+      "schema": "Survey",
+      "description": "Master collection storing the survey structures and definitions"
+    },
+    "/responses/{responseId}": {
+      "schema": "SurveyResponse",
+      "description": "Collection storing all submitted survey responses"
+    }
+  }
+}

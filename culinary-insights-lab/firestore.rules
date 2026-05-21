@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global safety net: Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global reusable helper guards
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { 
+      return request.resource.data; 
+    }
+    
+    function existing() { 
+      return resource.data; 
+    }
+
+    // Survey entity validation blueprint
+    function isValidSurvey(data) {
+      return data.keys().hasAll(['id', 'title', 'questions'])
+        && data.keys().size() == 3
+        && data.id is string && data.id.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.questions is list;
+    }
+
+    // Survey Response entity validation blueprint
+    function isValidResponse(data) {
+      return data.keys().hasAll(['id', 'surveyId', 'answers', 'timestamp'])
+        && data.keys().size() == 4
+        && data.id is string && data.id.size() <= 128
+        && data.surveyId is string && data.surveyId.size() <= 128
+        && data.answers is map
+        && data.timestamp is string && data.timestamp.size() <= 128;
+    }
+
+    // Rules for Surveys
+    match /surveys/{surveyId} {
+      allow get: if isValidId(surveyId);
+      allow list: if true;
+      allow create: if isValidId(surveyId) && isValidSurvey(incoming());
+      allow update: if isValidId(surveyId) && isValidSurvey(incoming()) && incoming().id == existing().id;
+      allow delete: if isValidId(surveyId);
+    }
+
+    // Rules for Responses
+    match /responses/{responseId} {
+      allow get: if isValidId(responseId);
+      allow list: if true;
+      allow create: if isValidId(responseId) && isValidResponse(incoming());
+      allow update: if false; // Responses are immutable to preserve authenticity
+      allow delete: if isValidId(responseId);
+    }
+  }
+}

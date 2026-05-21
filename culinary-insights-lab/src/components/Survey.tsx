@@ -9,6 +9,9 @@ export default function Survey() {
   const [submitted, setSubmitted] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+  const [respondentName, setRespondentName] = useState("");
+  const [respondentEmail, setRespondentEmail] = useState("");
+  const [authorizedConsent, setAuthorizedConsent] = useState(false);
 
   useEffect(() => {
     fetch(`/api/survey/${id}`)
@@ -24,12 +27,18 @@ export default function Survey() {
   );
 
   const handleSubmit = async () => {
+    if (!authorizedConsent) return;
     setSubmitting(true);
     try {
       const res = await fetch(`/api/survey/${id}/response`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(answers)
+        body: JSON.stringify({
+          ...answers,
+          _respondentName: respondentName.trim(),
+          _respondentEmail: respondentEmail.trim(),
+          _authorizedConsent: authorizedConsent
+        })
       });
       if (!res.ok) throw new Error("Error en servidor: " + res.statusText);
       setSubmitted(true);
@@ -53,7 +62,7 @@ export default function Survey() {
     return ans !== undefined && ans !== null && ans !== "";
   };
 
-  const isFormValid = survey.questions.every((q: any) => isQuestionAnswered(q));
+  const isFormValid = survey.questions.every((q: any) => isQuestionAnswered(q)) && authorizedConsent;
 
   if (submitted) return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50">
@@ -90,25 +99,32 @@ export default function Survey() {
                             </p>
                             
                             {q.type === "scale" && (
-                                <div className="flex flex-wrap gap-2 pt-1">
-                                    {Array.from({length: rangeLength}).map((_, i) => {
-                                        const currentVal = minVal + i;
-                                        return (
-                                            <button 
-                                                key={i} 
-                                                type="button"
-                                                onClick={() => setAnswers({...answers, [q.id]: currentVal})}
-                                                className={cn(
-                                                    "w-10 h-10 md:w-11 md:h-11 rounded-full border transition-all text-sm font-medium",
-                                                    answers[q.id] === currentVal 
-                                                        ? "bg-primary text-white border-primary shadow-sm" 
-                                                        : "border-gray-200 text-gray-600 bg-gray-50 hover:border-primary hover:text-primary"
-                                                )}
-                                            >
-                                                {currentVal}
-                                            </button>
-                                        );
-                                    })}
+                                <div className="space-y-3">
+                                    <div className="flex flex-wrap gap-2 pt-1">
+                                        {Array.from({length: rangeLength}).map((_, i) => {
+                                            const currentVal = minVal + i;
+                                            return (
+                                                <button 
+                                                    key={i} 
+                                                    type="button"
+                                                    onClick={() => setAnswers({...answers, [q.id]: currentVal})}
+                                                    className={cn(
+                                                        "w-10 h-10 md:w-11 md:h-11 rounded-full border transition-all text-sm font-medium",
+                                                        answers[q.id] === currentVal 
+                                                            ? "bg-primary text-white border-primary shadow-sm" 
+                                                            : "border-gray-200 text-gray-600 bg-gray-50 hover:border-primary hover:text-primary"
+                                                    )}
+                                                >
+                                                    {currentVal}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {(q.minLabel || q.maxLabel) && (
+                                        <p className="text-xs text-gray-500 bg-gray-100/60 border border-gray-200/50 px-3 py-1.5 rounded-lg inline-block select-none animate-fadeIn">
+                                            Escala de <strong className="font-semibold text-gray-700">{minVal} a {maxVal}</strong>, siendo <strong className="font-semibold text-gray-700">{minVal} ({q.minLabel || "Mínimo"})</strong> y <strong className="font-semibold text-gray-700">{maxVal} ({q.maxLabel || "Máximo"})</strong>.
+                                        </p>
+                                    )}
                                 </div>
                             )}
                             
@@ -193,10 +209,73 @@ export default function Survey() {
                 })}
             </div>
 
+            {/* FORMULARIO DE REGISTRO E INFORMACIÓN DE DATOS PERSONALES */}
+            <div className="mt-10 pt-8 border-t border-gray-100 space-y-5">
+                <div>
+                    <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                        Información del Participante & Habeas Data
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+                        Por favor, proporciona tus datos básicos y autoriza el tratamiento de tu información personal antes de enviar el cuestionario.
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Nombre Completo</label>
+                        <input 
+                            type="text"
+                            value={respondentName}
+                            onChange={e => setRespondentName(e.target.value)}
+                            placeholder="Ej: Laura Castro"
+                            className="w-full text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Correo Electrónico</label>
+                        <input 
+                            type="email"
+                            value={respondentEmail}
+                            onChange={e => setRespondentEmail(e.target.value)}
+                            placeholder="Ej: laura@ejemplo.com"
+                            className="w-full text-xs text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                        />
+                    </div>
+                </div>
+
+                {/* POLITICA DE TRATAMIENTO DE DATOS / HABEAS DATA */}
+                <div 
+                    onClick={() => setAuthorizedConsent(!authorizedConsent)}
+                    className={cn(
+                        "p-4 border rounded-xl transition-all cursor-pointer flex gap-3 text-left select-none",
+                        authorizedConsent 
+                            ? "bg-primary/[0.03] border-primary/20 text-gray-800" 
+                            : "bg-gray-50/50 border-gray-200 text-gray-600 hover:border-gray-300"
+                    )}
+                >
+                    <div className="pt-0.5">
+                        <div className={cn(
+                            "w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0",
+                            authorizedConsent 
+                                ? "bg-primary border-primary text-white" 
+                                : "border-gray-300 bg-white"
+                        )}>
+                            {authorizedConsent && "✓"}
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-gray-700">Autorización de Tratamiento de Datos (Requerido)</p>
+                        <p className="text-[10px] leading-relaxed text-gray-500 font-medium">
+                            De conformidad con la Ley 1581 de 2012 de Protección de Datos Personales (Habeas Data), autorizo de manera libre, previa e informada el uso de mis datos recolectados en esta encuesta con finalidades estrictamente académicas, estadísticas y de mejora del servicio. El organizador garantiza la confidencialidad y el derecho a revocar este acceso en cualquier momento.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <button 
                 onClick={handleSubmit} 
                 disabled={!isFormValid || submitting}
-                className="mt-10 w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg px-6 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                className="mt-8 w-full bg-primary hover:bg-primary-dark text-white font-medium rounded-lg px-6 py-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm"
             >
                 {submitting ? 'Enviando Respuestas...' : 'Enviar Respuestas'}
             </button>

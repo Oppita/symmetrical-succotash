@@ -19,188 +19,222 @@ let isFirebaseEnabled = false;
 
 // Fallback high-performance local database structures
 const DATA_FILE = path.join(process.cwd(), "data.json");
+const defaultDemoSurvey = {
+  id: "demo",
+  title: "Encuesta de Evaluación",
+  questions: [
+    { 
+      id: "q1", 
+      text: "Calificación de la experiencia (Escala 1 a 5, siendo 1 Deficiente y 5 Excelente)", 
+      type: "scale", 
+      min: 1, 
+      max: 5,
+      minLabel: "Deficiente",
+      maxLabel: "Excelente"
+    },
+    { id: "q2", text: "Aspecto más valorado", type: "choice", options: ["Atención", "Calidad", "Rapidez", "Precio"] }
+  ]
+};
+
+const defaultPlataformaSurvey = {
+  id: "plataforma2026",
+  title: "Evaluación Plataforma Nacional 2026",
+  questions: [
+    {
+      id: "q1",
+      section: "SECCIÓN 1 – PARTICIPACIÓN",
+      text: "¿Cuál fue su tipo de participación en el evento?",
+      type: "choice",
+      options: [
+        "Asistente",
+        "Ponente",
+        "Entidad pública",
+        "Academia",
+        "Organización social/comunitaria",
+        "Cooperación internacional",
+        "Sector privado",
+        "Otro"
+      ]
+    },
+    {
+      id: "q2",
+      text: "¿En qué espacios participó principalmente? (Puede seleccionar varios)",
+      type: "checkbox",
+      options: [
+        "Plenarias",
+        "Sesiones paralelas",
+        "Laboratorios",
+        "Espacios de alto nivel",
+        "Stands",
+        "Galería de posters",
+        "Espacios de networking/interacción"
+      ]
+    },
+    {
+      id: "q3",
+      section: "SECCIÓN 2 – EXPERIENCIA GENERAL",
+      text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026? (Escala 1 a 5, siendo 1 Deficiente y 5 Excelente)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Deficiente",
+      maxLabel: "Excelente"
+    },
+    {
+      id: "q4",
+      text: "¿En qué medida el evento cumplió sus expectativas?",
+      type: "choice",
+      options: [
+        "Superó mis expectativas",
+        "Cumplió totalmente",
+        "Cumplió parcialmente",
+        "No cumplió"
+      ]
+    },
+    {
+      id: "q5",
+      text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades? (Escala 1 a 5, siendo 1 Muy improbable y 5 Muy probable)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy improbable",
+      maxLabel: "Muy probable"
+    },
+    {
+      id: "q6",
+      section: "SECCIÓN 3 – CONTENIDO Y PERTINENCIA",
+      text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados? (Escala 1 a 5, siendo 1 Deficiente y 5 Excelente)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Deficiente",
+      maxLabel: "Excelente"
+    },
+    {
+      id: "q7",
+      text: "¿Qué tan útiles fueron las experiencias, metodologías y conocimientos compartidos para su trabajo o territorio? (Escala 1 a 5, siendo 1 Nada útiles y 5 Muy útiles)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Nada útiles",
+      maxLabel: "Muy útiles"
+    },
+    {
+      id: "q8",
+      text: "¿Considera que la agenda abordó temas relevantes y actuales para la gestión del riesgo de desastres?",
+      type: "choice",
+      options: [
+        "Totalmente",
+        "En gran medida",
+        "Parcialmente",
+        "Muy poco",
+        "Nada"
+      ]
+    },
+    {
+      id: "q9_1",
+      section: "SECCIÓN 4 – ORGANIZACIÓN Y LOGÍSTICA",
+      text: "Evaluación logística: Proceso de acreditación e ingreso (Escala 1 a 5, siendo 1 Malo y 5 Muy bueno)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Malo",
+      maxLabel: "Muy bueno"
+    },
+    {
+      id: "q9_2",
+      text: "Evaluación logística: Organización general (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_3",
+      text: "Evaluación logística: Puntualidad de las sesiones (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_4",
+      text: "Evaluación logística: Calidad de los espacios y salas (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_5",
+      text: "Evaluación logística: Señalización y orientación (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_6",
+      text: "Evaluación logística: Atención del equipo organizador (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_7",
+      text: "Evaluación logística: Recursos audiovisuales y técnicos (Escala 1 a 5, siendo 1 Malo y 5 Muy bueno)",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Malo",
+      maxLabel: "Muy bueno"
+    },
+    {
+      id: "q10",
+      section: "SECCIÓN 5 – IMPACTO Y VALOR GENERADO",
+      text: "¿Cuál fue el espacio o actividad más valiosa para usted y por qué?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q11",
+      text: "¿Qué aprendizaje, herramienta o experiencia considera que podrá aplicar posteriormente en su organización, comunidad o territorio?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q12",
+      section: "SECCIÓN 6 – OPORTUNIDADES DE MEJORA",
+      text: "¿Qué aspecto considera que debería mejorarse para futuras versiones de la Plataforma Nacional?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q13",
+      text: "¿Qué temas o enfoques le gustaría que se fortalecieran en próximas ediciones?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q14",
+      section: "CIERRE",
+      text: "Comentarios finales",
+      type: "text",
+      optional: true,
+      placeholder: "Comentarios opcionales..."
+    }
+  ]
+};
+
 let localSurveys: Record<string, any> = {
-  "demo": {
-    id: "demo",
-    title: "Encuesta de Evaluación",
-    questions: [
-      { id: "q1", text: "Calificación de la experiencia (1-5)", type: "scale", max: 5 },
-      { id: "q2", text: "Aspecto más valorado", type: "choice", options: ["Atención", "Calidad", "Rapidez", "Precio"] }
-    ]
-  },
-  "plataforma2026": {
-    id: "plataforma2026",
-    title: "Evaluación Plataforma Nacional 2026",
-    questions: [
-      {
-        id: "q1",
-        section: "SECCIÓN 1 – PARTICIPACIÓN",
-        text: "¿Cuál fue su tipo de participación en el evento?",
-        type: "choice",
-        options: [
-          "Asistente",
-          "Ponente",
-          "Entidad pública",
-          "Academia",
-          "Organización social/comunitaria",
-          "Cooperación internacional",
-          "Sector privado",
-          "Otro"
-        ]
-      },
-      {
-        id: "q2",
-        text: "¿En qué espacios participó principalmente? (Puede seleccionar varios)",
-        type: "checkbox",
-        options: [
-          "Plenarias",
-          "Sesiones paralelas",
-          "Laboratorios",
-          "Espacios de alto nivel",
-          "Stands",
-          "Galería de posters",
-          "Espacios de networking/interacción"
-        ]
-      },
-      {
-        id: "q3",
-        section: "SECCIÓN 2 – EXPERIENCIA GENERAL",
-        text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026? (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q4",
-        text: "¿En qué medida el evento cumplió sus expectativas?",
-        type: "choice",
-        options: [
-          "Superó mis expectativas",
-          "Cumplió totalmente",
-          "Cumplió parcialmente",
-          "No cumplió"
-        ]
-      },
-      {
-        id: "q5",
-        text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades? (Escala de 0 a 10)",
-        type: "scale",
-        min: 0,
-        max: 10
-      },
-      {
-        id: "q6",
-        section: "SECCIÓN 3 – CONTENIDO Y PERTINENCIA",
-        text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados? (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q7",
-        text: "¿Qué tan útiles fueron las experiencias, metodologías y conocimientos compartidos para su trabajo o territorio? (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q8",
-        text: "¿Considera que la agenda abordó temas relevantes y actuales para la gestión del riesgo de desastres?",
-        type: "choice",
-        options: [
-          "Totalmente",
-          "En gran medida",
-          "Parcialmente",
-          "Muy poco",
-          "Nada"
-        ]
-      },
-      {
-        id: "q9_1",
-        section: "SECCIÓN 4 – ORGANIZACIÓN Y LOGÍSTICA",
-        text: "Evaluación logística: Proceso de acreditación e ingreso (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q9_2",
-        text: "Evaluación logística: Organización general (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q9_3",
-        text: "Evaluación logística: Puntualidad de las sesiones (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q9_4",
-        text: "Evaluación logística: Calidad de los espacios y salas (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q9_5",
-        text: "Evaluación logística: Señalización y orientación (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q9_6",
-        text: "Evaluación logística: Atención del equipo organizador (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q9_7",
-        text: "Evaluación logística: Recursos audiovisuales y técnicos (Escala 1 a 5)",
-        type: "scale",
-        min: 1,
-        max: 5
-      },
-      {
-        id: "q10",
-        section: "SECCIÓN 5 – IMPACTO Y VALOR GENERADO",
-        text: "¿Cuál fue el espacio o actividad más valiosa para usted y por qué?",
-        type: "text",
-        placeholder: "Escribe tu respuesta..."
-      },
-      {
-        id: "q11",
-        text: "¿Qué aprendizaje, herramienta o experiencia considera que podrá aplicar posteriormente en su organización, comunidad o territorio?",
-        type: "text",
-        placeholder: "Escribe tu respuesta..."
-      },
-      {
-        id: "q12",
-        section: "SECCIÓN 6 – OPORTUNIDADES DE MEJORA",
-        text: "¿Qué aspecto considera que debería mejorarse para futuras versiones de la Plataforma Nacional?",
-        type: "text",
-        placeholder: "Escribe tu respuesta..."
-      },
-      {
-        id: "q13",
-        text: "¿Qué temas o enfoques le gustaría que se fortalecieran en próximas ediciones?",
-        type: "text",
-        placeholder: "Escribe tu respuesta..."
-      },
-      {
-        id: "q14",
-        section: "CIERRE",
-        text: "Comentarios finales",
-        type: "text",
-        optional: true,
-        placeholder: "Comentarios opcionales..."
-      }
-    ]
-  }
+  "demo": defaultDemoSurvey,
+  "plataforma2026": defaultPlataformaSurvey
 };
 
 let localResponses: any[] = [
@@ -245,9 +279,16 @@ async function loadLocalDiskData() {
   try {
     const raw = await fs.readFile(DATA_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    if (parsed.surveys) localSurveys = parsed.surveys;
+    if (parsed.surveys) {
+      localSurveys = parsed.surveys;
+    }
+    // Force reset standard template surveys to ensure scale 1-5 and label updates are applied instantly
+    localSurveys["demo"] = defaultDemoSurvey;
+    localSurveys["plataforma2026"] = defaultPlataformaSurvey;
+    
     if (parsed.responses) localResponses = parsed.responses;
-    console.log("💾 Carga de datos locales desde data.json completada.");
+    console.log("💾 Carga de datos locales desde data.json completada, plantillas estándar actualizadas.");
+    await saveLocalDiskData();
   } catch (err) {
     // Si no existe, creamos el archivo inicial para que persista
     await saveLocalDiskData();
@@ -324,6 +365,13 @@ export async function dbInit() {
       db = getFirestore(app);
       isFirebaseEnabled = true;
       console.log("🔥 ¡Conexión con Firebase Firestore establecida con éxito!");
+      
+      // Auto-update standard surveys to Firestore to ensure boundaries and labels are current
+      for (const surveyId of Object.keys(localSurveys)) {
+        const docRef = doc(db, "surveys", surveyId);
+        await setDoc(docRef, localSurveys[surveyId]);
+      }
+      console.log("⚡ Encuestas estándar sincronizadas con Firebase Firestore.");
     } catch (err) {
       console.error("⚠️ Falló la conexión inicial a Firebase. Utilizando fallback local:", err);
       isFirebaseEnabled = false;

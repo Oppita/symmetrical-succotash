@@ -407,7 +407,7 @@ export default function Survey() {
                     <div className="space-y-1">
                         <p className="text-[11px] font-bold uppercase tracking-wide text-gray-700">Autorización de Tratamiento de Datos (Requerido)</p>
                         <p className="text-[10px] leading-relaxed text-gray-500 font-medium">
-                            De conformidad con la Ley 1581 de 2012 de Protección de Datos Personales (Habeas Data), autorizo de manera libre, previa e informada el uso de mis datos recolectados en esta encuesta con finalidades estrictamente académicas, estadísticas y de mejora del servicio. El organizador garantiza la confidencialidad y el derecho a revocar este acceso en cualquier momento.
+                            De acuerdo con la Ley Estatutaria 1581 de 2012 de Protección de Datos Personales, al Decreto 1377 de 2013, y a las demás normas concordantes, autorizo como titular de mis datos, para que los suministrados en esta encuesta, sean incorporados en una base de información responsabilidad de la Unidad Nacional para la Gestión del Riesgo de Desastres UNGRD, puedan ser utilizados con la finalidad de medir la satisfacción de los asistentes al evento. Así mismo entiendo que el tratamiento de mis datos personales por parte de la entidad tiene una finalidad legítima de acuerdo con la ley y la Constitución.
                         </p>
                     </div>
                 </div>

@@ -2,6 +2,33 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { cn } from "../lib/utils";
 
+const q1SpecsMap: Record<string, { label: string; placeholder: string }> = {
+  "Entidad pública": {
+    label: "¿Cuál entidad pública?",
+    placeholder: "Ej: Ministerio de Ambiente, Alcaldía Municipal, etc."
+  },
+  "Academia": {
+    label: "¿Cuál institución académica / universidad?",
+    placeholder: "Ej: Universidad Nacional de Colombia, Universidad del Valle, etc."
+  },
+  "Organización social/comunitaria": {
+    label: "¿Cuál organización social o comunitaria?",
+    placeholder: "Ej: Asociación de Juntas de Acción Comunal, Cabildo..."
+  },
+  "Cooperación internacional": {
+    label: "¿Cuál organismo / agencia de cooperación?",
+    placeholder: "Ej: PNUD, USAID, Cruz Roja, etc."
+  },
+  "Sector privado": {
+    label: "¿Cuál empresa, gremio o entidad privada?",
+    placeholder: "Ej: Cámara de Comercio de Bogotá, Constructora Y, etc."
+  },
+  "Otro": {
+    label: "Por favor especifica tu tipo de participación",
+    placeholder: "Ej: Voluntario, Prensa, Delegado extranjero, etc."
+  }
+};
+
 export default function Survey() {
   const { id } = useParams();
   const [survey, setSurvey] = useState<any>(null);
@@ -53,6 +80,23 @@ export default function Survey() {
   const isQuestionAnswered = (q: any) => {
     if (q.optional) return true;
     const ans = answers[q.id];
+    
+    // Dynamic specification validations
+    if (q.id === "q1") {
+      if (!ans) return false;
+      const isSpecRequired = ["Entidad pública", "Academia", "Organización social/comunitaria", "Cooperación internacional", "Sector privado", "Otro"].includes(ans);
+      if (isSpecRequired) {
+        return typeof answers["q1_spec"] === "string" && answers["q1_spec"].trim().length > 0;
+      }
+    }
+    
+    if (q.id === "q2") {
+      if (!Array.isArray(ans) || ans.length === 0) return false;
+      if (ans.includes("Otro")) {
+        return typeof answers["q2_spec"] === "string" && answers["q2_spec"].trim().length > 0;
+      }
+    }
+
     if (q.type === "checkbox") {
       return Array.isArray(ans) && ans.length > 0;
     }
@@ -169,76 +213,124 @@ export default function Survey() {
                                             })}
                                         </div>
                                     )}
-                                    {(q.minLabel || q.maxLabel) && (
+                                    {(q.minLabel || q.maxLabel) && rangeLength !== 5 && (
                                         <p className="text-xs text-gray-500 bg-gray-100/60 border border-gray-200/50 px-3 py-1.5 rounded-lg inline-block select-none animate-fadeIn">
-                                            Selección cualitativa de <strong className="font-semibold text-gray-700">{minVal} a {maxVal}</strong>, donde <strong className="font-semibold text-gray-700">{minVal}</strong> es <strong className="font-semibold text-gray-700">{q.minLabel || "Mínimo"}</strong> y <strong className="font-semibold text-gray-700">{maxVal}</strong> es <strong className="font-semibold text-gray-700">{q.maxLabel || "Máximo"}</strong>.
+                                            Valoración desde <strong className="font-semibold text-gray-700">{q.minLabel}</strong> hasta <strong className="font-semibold text-gray-700">{q.maxLabel}</strong>.
                                         </p>
                                     )}
                                 </div>
                             )}
                             
                             {q.type === "choice" && (
-                                <div className="flex flex-col gap-2 pt-1">
-                                    {q.options.map((opt: string) => (
-                                        <button 
-                                            key={opt}
-                                            type="button"
-                                            onClick={() => setAnswers({...answers, [q.id]: opt})}
-                                            className={cn(
-                                                "p-3.5 text-left border rounded-lg transition-all text-sm font-medium",
-                                                answers[q.id] === opt 
-                                                    ? "border-primary bg-primary-light text-primary-dark" 
-                                                    : "border-gray-200 bg-gray-50 text-gray-700 hover:border-primary/50"
-                                            )}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
-                            {q.type === "checkbox" && (
-                                <div className="flex flex-col gap-2 pt-1">
-                                    {q.options.map((opt: string) => {
-                                        const currentAnswers = answers[q.id] || [];
-                                        const isSelected = currentAnswers.includes(opt);
-                                        const toggleCheckbox = () => {
-                                            if (isSelected) {
-                                                setAnswers({
-                                                    ...answers,
-                                                    [q.id]: currentAnswers.filter((item: string) => item !== opt)
-                                                });
-                                            } else {
-                                                setAnswers({
-                                                    ...answers,
-                                                    [q.id]: [...currentAnswers, opt]
-                                                });
-                                            }
-                                        };
-                                        return (
+                                <div className="space-y-3 pt-1">
+                                    <div className="flex flex-col gap-2">
+                                        {q.options.map((opt: string) => (
                                             <button 
                                                 key={opt}
                                                 type="button"
-                                                onClick={toggleCheckbox}
+                                                onClick={() => {
+                                                    const updatedAnswers = { ...answers, [q.id]: opt };
+                                                    if (q.id === "q1" && !q1SpecsMap[opt]) {
+                                                        delete updatedAnswers["q1_spec"];
+                                                    }
+                                                    setAnswers(updatedAnswers);
+                                                }}
                                                 className={cn(
                                                     "p-3.5 text-left border rounded-lg transition-all text-sm font-medium flex justify-between items-center",
-                                                    isSelected 
-                                                        ? "border-primary bg-primary-light text-primary-dark font-semibold" 
-                                                        : "border-gray-200 bg-gray-50 text-gray-700 hover:border-primary/40"
+                                                    answers[q.id] === opt 
+                                                        ? "border-primary bg-primary-light text-primary-dark font-semibold shadow-sm" 
+                                                        : "border-gray-200 bg-gray-50 text-gray-700 hover:border-primary/50"
                                                 )}
                                             >
                                                 <span>{opt}</span>
                                                 <div className={cn(
-                                                    "w-5 h-5 rounded border flex items-center justify-center transition-all",
-                                                    isSelected 
+                                                    "w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0",
+                                                    answers[q.id] === opt 
                                                         ? "bg-primary border-primary text-white" 
                                                         : "border-gray-300 bg-white"
                                                 )}>
-                                                    {isSelected && "✓"}
+                                                    {answers[q.id] === opt && "✓"}
                                                 </div>
                                             </button>
-                                        );
-                                    })}
+                                        ))}
+                                    </div>
+
+                                    {q.id === "q1" && answers["q1"] && q1SpecsMap[answers["q1"]] && (
+                                        <div className="bg-primary/[0.02] border border-primary/15 rounded-xl p-4 mt-2 space-y-2 animate-fadeIn">
+                                            <label className="block text-[11px] font-bold text-primary uppercase tracking-wider">
+                                                {q1SpecsMap[answers["q1"]].label} <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={answers["q1_spec"] || ""}
+                                                onChange={(e) => setAnswers({ ...answers, q1_spec: e.target.value })}
+                                                placeholder={q1SpecsMap[answers["q1"]].placeholder}
+                                                className="w-full text-xs text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-inner"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {q.type === "checkbox" && (
+                                <div className="space-y-3 pt-1">
+                                    <div className="flex flex-col gap-2">
+                                        {q.options.map((opt: string) => {
+                                            const currentAnswers = answers[q.id] || [];
+                                            const isSelected = currentAnswers.includes(opt);
+                                            const toggleCheckbox = () => {
+                                                let newSelection;
+                                                if (isSelected) {
+                                                    newSelection = currentAnswers.filter((item: string) => item !== opt);
+                                                } else {
+                                                    newSelection = [...currentAnswers, opt];
+                                                }
+                                                const updatedAnswers = { ...answers, [q.id]: newSelection };
+                                                if (q.id === "q2" && !newSelection.includes("Otro")) {
+                                                    delete updatedAnswers["q2_spec"];
+                                                }
+                                                setAnswers(updatedAnswers);
+                                            };
+                                            return (
+                                                <button 
+                                                    key={opt}
+                                                    type="button"
+                                                    onClick={toggleCheckbox}
+                                                    className={cn(
+                                                        "p-3.5 text-left border rounded-lg transition-all text-sm font-medium flex justify-between items-center",
+                                                        isSelected 
+                                                            ? "border-primary bg-primary-light text-primary-dark font-semibold shadow-sm" 
+                                                            : "border-gray-200 bg-gray-50 text-gray-700 hover:border-primary/40"
+                                                    )}
+                                                >
+                                                    <span>{opt}</span>
+                                                    <div className={cn(
+                                                        "w-5 h-5 rounded border flex items-center justify-center transition-all",
+                                                        isSelected 
+                                                            ? "bg-primary border-primary text-white animate-scaleIn" 
+                                                            : "border-gray-300 bg-white"
+                                                    )}>
+                                                        {isSelected && "✓"}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {q.id === "q2" && Array.isArray(answers["q2"]) && answers["q2"].includes("Otro") && (
+                                        <div className="bg-primary/[0.02] border border-primary/15 rounded-xl p-4 mt-2 space-y-2 animate-fadeIn">
+                                            <label className="block text-[11px] font-bold text-primary uppercase tracking-wider">
+                                                ¿Cuál es el otro espacio o actividad? <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={answers["q2_spec"] || ""}
+                                                onChange={(e) => setAnswers({ ...answers, q2_spec: e.target.value })}
+                                                placeholder="Ej: Talleres paralelos, Stand cultural, etc."
+                                                className="w-full text-xs text-gray-800 bg-white border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all shadow-inner"
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

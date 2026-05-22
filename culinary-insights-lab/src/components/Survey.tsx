@@ -100,29 +100,78 @@ export default function Survey() {
                             
                             {q.type === "scale" && (
                                 <div className="space-y-3">
-                                    <div className="flex flex-wrap gap-2 pt-1">
-                                        {Array.from({length: rangeLength}).map((_, i) => {
-                                            const currentVal = minVal + i;
-                                            return (
-                                                <button 
-                                                    key={i} 
-                                                    type="button"
-                                                    onClick={() => setAnswers({...answers, [q.id]: currentVal})}
-                                                    className={cn(
-                                                        "w-10 h-10 md:w-11 md:h-11 rounded-full border transition-all text-sm font-medium",
-                                                        answers[q.id] === currentVal 
-                                                            ? "bg-primary text-white border-primary shadow-sm" 
-                                                            : "border-gray-200 text-gray-600 bg-gray-50 hover:border-primary hover:text-primary"
-                                                    )}
-                                                >
-                                                    {currentVal}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                    {rangeLength === 5 ? (
+                                        <div className="flex flex-col gap-2 pt-1">
+                                            {Array.from({length: rangeLength}).map((_, i) => {
+                                                const currentVal = minVal + i;
+                                                const getScaleOptionLabel = (val: number) => {
+                                                    if (q.id === "q7" || q.minLabel?.toLowerCase().includes("útil") || q.maxLabel?.toLowerCase().includes("útil")) {
+                                                        const labels = ["Nada útiles", "Poco útiles", "Regularmente útiles", "Útiles", "Muy útiles"];
+                                                        return labels[val - 1] || `${val}`;
+                                                    }
+                                                    if (q.minLabel?.toLowerCase().includes("deficiente") || q.maxLabel?.toLowerCase().includes("excelente")) {
+                                                        const labels = ["Deficiente", "Mala", "Regular", "Buena", "Excelente"];
+                                                        return labels[val - 1] || `${val}`;
+                                                    }
+                                                    if (q.minLabel?.toLowerCase().includes("malo") || q.maxLabel?.toLowerCase().includes("bueno") || q.minLabel?.toLowerCase().includes("mala") || q.maxLabel?.toLowerCase().includes("buena")) {
+                                                        const labels = ["Muy mala", "Mala", "Regular", "Buena", "Muy buena"];
+                                                        return labels[val - 1] || `${val}`;
+                                                    }
+                                                    // Fallback 1-5
+                                                    const labels = ["Muy mala", "Mala", "Regular", "Buena", "Muy buena"];
+                                                    return labels[val - 1] || `${val}`;
+                                                };
+                                                
+                                                return (
+                                                    <button 
+                                                        key={i} 
+                                                        type="button"
+                                                        onClick={() => setAnswers({...answers, [q.id]: currentVal})}
+                                                        className={cn(
+                                                            "p-3.5 text-left border rounded-lg transition-all text-sm font-medium flex justify-between items-center",
+                                                            answers[q.id] === currentVal 
+                                                                ? "border-primary bg-primary-light text-primary-dark font-semibold" 
+                                                                : "border-gray-200 bg-gray-50 text-gray-700 hover:border-primary/50"
+                                                        )}
+                                                    >
+                                                        <span className="capitalize">{getScaleOptionLabel(currentVal)}</span>
+                                                        <div className={cn(
+                                                            "w-5 h-5 rounded-full border flex items-center justify-center transition-all shrink-0",
+                                                            answers[q.id] === currentVal 
+                                                                ? "bg-primary border-primary text-white" 
+                                                                : "border-gray-300 bg-white"
+                                                        )}>
+                                                            {answers[q.id] === currentVal && "✓"}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-wrap gap-2 pt-1">
+                                            {Array.from({length: rangeLength}).map((_, i) => {
+                                                const currentVal = minVal + i;
+                                                return (
+                                                    <button 
+                                                        key={i} 
+                                                        type="button"
+                                                        onClick={() => setAnswers({...answers, [q.id]: currentVal})}
+                                                        className={cn(
+                                                            "w-10 h-10 md:w-11 md:h-11 rounded-full border transition-all text-sm font-medium",
+                                                            answers[q.id] === currentVal 
+                                                                ? "bg-primary text-white border-primary shadow-sm" 
+                                                                : "border-gray-200 text-gray-600 bg-gray-50 hover:border-primary hover:text-primary"
+                                                        )}
+                                                    >
+                                                        {currentVal}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                     {(q.minLabel || q.maxLabel) && (
                                         <p className="text-xs text-gray-500 bg-gray-100/60 border border-gray-200/50 px-3 py-1.5 rounded-lg inline-block select-none animate-fadeIn">
-                                            Escala de <strong className="font-semibold text-gray-700">{minVal} a {maxVal}</strong>, siendo <strong className="font-semibold text-gray-700">{minVal} ({q.minLabel || "Mínimo"})</strong> y <strong className="font-semibold text-gray-700">{maxVal} ({q.maxLabel || "Máximo"})</strong>.
+                                            Selección cualitativa de <strong className="font-semibold text-gray-700">{minVal} a {maxVal}</strong>, donde <strong className="font-semibold text-gray-700">{minVal}</strong> es <strong className="font-semibold text-gray-700">{q.minLabel || "Mínimo"}</strong> y <strong className="font-semibold text-gray-700">{maxVal}</strong> es <strong className="font-semibold text-gray-700">{q.maxLabel || "Máximo"}</strong>.
                                         </p>
                                     )}
                                 </div>

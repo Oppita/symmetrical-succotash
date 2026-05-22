@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import {
   dbInit,
   isFirebaseConnected,
@@ -19,7 +19,6 @@ const ai = process.env.GEMINI_API_KEY
     : null;
 
 const app = express();
-
 app.use(express.json());
 
 // API STATUS
@@ -27,9 +26,7 @@ app.get("/api/db-status", (req, res) => {
   res.json({
     connected: isFirebaseConnected(),
     projectId: process.env.FIREBASE_PROJECT_ID || null,
-    provider: isFirebaseConnected()
-      ? "Firebase Firestore"
-      : "Local Disk Fallback (data.json)"
+    provider: isFirebaseConnected() ? "Firebase Firestore" : "Local Disk Fallback (data.json)"
   });
 });
 
@@ -37,24 +34,17 @@ app.get("/api/db-status", (req, res) => {
 app.get("/api/surveys", async (req, res) => {
   try {
     const list = await getSurveys();
-
-    const summary = await Promise.all(
-      list.map(async (s: any) => {
-        const count = await getResponseCount(s.id);
-
-        return {
-          id: s.id,
-          title: s.title,
-          responseCount: count
-        };
-      })
-    );
-
+    const summary = await Promise.all(list.map(async (s: any) => {
+      const count = await getResponseCount(s.id);
+      return {
+        id: s.id,
+        title: s.title,
+        responseCount: count
+      };
+    }));
     res.json(summary);
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -62,20 +52,11 @@ app.get("/api/surveys", async (req, res) => {
 app.post("/api/surveys", async (req, res) => {
   try {
     console.log("POST /api/surveys received body:", req.body);
-
     const id = Date.now().toString(36);
-
-    const newSurvey = await saveSurvey(
-      id,
-      req.body.title,
-      req.body.questions
-    );
-
+    const newSurvey = await saveSurvey(id, req.body.title, req.body.questions);
     res.json(newSurvey);
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -83,20 +64,13 @@ app.post("/api/surveys", async (req, res) => {
 app.get("/api/survey/:id", async (req, res) => {
   try {
     const survey = await getSurveyById(req.params.id);
-
     if (!survey) {
-      res.status(404).json({
-        error: "Encuesta no encontrada"
-      });
-
+      res.status(404).json({ error: "Encuesta no encontrada" });
       return;
     }
-
     res.json(survey);
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -104,30 +78,16 @@ app.get("/api/survey/:id", async (req, res) => {
 app.put("/api/survey/:id", async (req, res) => {
   try {
     const id = req.params.id;
-
     const existingSurvey = await getSurveyById(id);
-
     if (!existingSurvey) {
-      res.status(404).json({
-        error: "Encuesta no encontrada"
-      });
-
+      res.status(404).json({ error: "Encuesta no encontrada" });
       return;
     }
-
     console.log(`PUT /api/survey/${id} received body:`, req.body);
-
-    const updatedSurvey = await saveSurvey(
-      id,
-      req.body.title,
-      req.body.questions
-    );
-
+    const updatedSurvey = await saveSurvey(id, req.body.title, req.body.questions);
     res.json(updatedSurvey);
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -135,26 +95,15 @@ app.put("/api/survey/:id", async (req, res) => {
 app.delete("/api/survey/:id", async (req, res) => {
   try {
     const id = req.params.id;
-
     const deleted = await deleteSurvey(id);
-
     if (!deleted) {
-      res.status(404).json({
-        error: "Encuesta no encontrada"
-      });
-
+      res.status(404).json({ error: "Encuesta no encontrada" });
       return;
     }
-
     console.log(`DELETE /api/survey/${id} completed successfully`);
-
-    res.json({
-      success: true
-    });
+    res.json({ success: true });
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -162,16 +111,10 @@ app.delete("/api/survey/:id", async (req, res) => {
 app.post("/api/survey/:id/response", async (req, res) => {
   try {
     const surveyId = req.params.id;
-
     await saveResponse(surveyId, req.body);
-
-    res.json({
-      success: true
-    });
+    res.json({ success: true });
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
@@ -179,49 +122,154 @@ app.post("/api/survey/:id/response", async (req, res) => {
 app.get("/api/survey/:id/results", async (req, res) => {
   try {
     const results = await getResponsesForSurvey(req.params.id);
-
     res.json(results);
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    res.status(500).json({ error: err.message });
   }
 });
 
 // AI COGNITIVE AGENT ANALYSIS
 app.post("/api/analyze", async (req, res) => {
   if (!ai) {
-    res.status(500).json({
-      error: "Falta GEMINI_API_KEY en las variables de entorno."
+    res.status(500).json({ error: "Falta GEMINI_API_KEY en las variables de entorno." });
+    return;
+  }
+  try {
+     const { surveyId, data } = req.body;
+     const survey = await getSurveyById(surveyId);
+     
+     const prompt = `
+     Analiza los siguientes resultados de una encuesta. 
+     Cuestionario Base: ${JSON.stringify(survey)}. 
+     Resultados Consolidados: ${JSON.stringify(data)}. 
+     Instrucción: Escribe un breve párrafo resumiendo el patrón principal encontrado de manera profesional y clara.
+     `;
+     
+     const response = await ai.models.generateContent({ 
+        model: "gemini-2.5-flash", 
+        contents: prompt 
+     });
+     
+     res.json({ analysis: response.text });
+  } catch (err: any) {
+     res.status(500).json({ error: err.message });
+  }
+});
+
+// SEMANTIC CLUSTERING API USING GEMINI
+app.post("/api/semantically-cluster-specs", async (req, res) => {
+  const { specs } = req.body;
+  
+  if (!Array.isArray(specs) || specs.length === 0) {
+    res.json({ clusters: [] });
+    return;
+  }
+
+  // Backup fallback algorithm
+  const getFallbackClusters = () => {
+    const groups: Record<string, string[]> = {};
+    specs.forEach(s => {
+      const clean = String(s).trim();
+      if (!clean) return;
+      const key = clean.toLowerCase();
+      
+      const foundKey = Object.keys(groups).find(k => {
+        return k.includes(key) || key.includes(k) || k.replace(/[^a-z0-9]/g, "") === key.replace(/[^a-z0-9]/g, "");
+      });
+
+      if (foundKey) {
+        groups[foundKey].push(clean);
+      } else {
+        groups[key] = [clean];
+      }
     });
 
+    const clusters = Object.entries(groups).map(([_, list]) => ({
+      name: list[0],
+      count: list.length,
+      items: list
+    })).sort((a, b) => b.count - a.count);
+
+    return { clusters };
+  };
+
+  if (!ai) {
+    console.log("No GEMINI_API_KEY. Using local specification clustering fallback.");
+    res.json(getFallbackClusters());
     return;
   }
 
   try {
-    const { surveyId, data } = req.body;
-
-    const survey = await getSurveyById(surveyId);
-
     const prompt = `
-    Analiza los siguientes resultados de una encuesta.
-    Cuestionario Base: ${JSON.stringify(survey)}.
-    Resultados Consolidados: ${JSON.stringify(data)}.
-    Instrucción: Escribe un breve párrafo resumiendo el patrón principal encontrado de manera profesional y clara.
+    Eres un analista de datos experto y asistente cognitivo para eventos premium.
+    Se te proporciona una lista de nombres de entidades, organizaciones o respuestas de texto libre registradas por usuarios en una encuesta de participación.
+    Tu tarea es agrupar y consolidar semánticamente estas cadenas para ignorar variaciones tipográficas, abreviaciones, o diferencias de redacción menores. Concéntrate en unificar las organizaciones o conceptos que sean evidentemente lo mismo.
+
+    Ejemplos de Consolidaciones:
+    - "Universidad Nacional", "U. Nacional", "UNAL", "Universidad Nacional de Colombia" -> "Universidad Nacional de Colombia"
+    - "Ministerio de Ambiente", "MinAmbiente", "Minambiente" -> "Ministerio de Ambiente y Desarrollo Sostenible"
+    - "PNUD", "Program of UN", "Programa de las Naciones Unidas para el Desarrollo" -> "PNUD (Naciones Unidas)"
+    - "Empresa X S.A.S", "Empresa X", "Empresa X Ltda" -> "Empresa X"
+
+    Para ítems únicos que no tengan afinidad evidente con otros, mantenlos como su propio grupo consolidado representativo. No obligues a agrupar cosas que son totalmente diferentes.
+
+    Lista de respuestas a agrupar:
+    ${JSON.stringify(specs)}
+
+    Devuelve un JSON con la estructura del ResponseSchema solicitado.
     `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt
+      model: "gemini-3.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            clusters: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { 
+                    type: Type.STRING, 
+                    description: "Nombre normalizado y limpio que represente al grupo consolidado." 
+                  },
+                  count: { 
+                    type: Type.INTEGER, 
+                    description: "Número total de respuestas de la lista original que cayeron en este grupo." 
+                  },
+                  items: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING },
+                    description: "Lista de los textos originales exactos que se agruparon aquí."
+                  }
+                },
+                required: ["name", "count", "items"]
+              }
+            }
+          },
+          required: ["clusters"]
+        }
+      }
     });
 
-    res.json({
-      analysis: response.text
-    });
+    if (response && response.text) {
+      const parsed = JSON.parse(response.text.trim());
+      // Ensure results are sorted by count desc
+      if (parsed && Array.isArray(parsed.clusters)) {
+        parsed.clusters.sort((a: any, b: any) => (b.count || 0) - (a.count || 0));
+        res.json(parsed);
+        return;
+      }
+    }
+    
+    throw new Error("Invalid or empty response from Gemini API");
+
   } catch (err: any) {
-    res.status(500).json({
-      error: err.message
-    });
+    console.error("Gemini specification clustering error:", err);
+    res.json(getFallbackClusters());
   }
 });
 
@@ -229,31 +277,22 @@ app.post("/api/analyze", async (req, res) => {
 async function startServer() {
   // Initialize Database (Firestore with data.json fallback)
   await dbInit();
-
+  
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
-      server: {
-        middlewareMode: true
-      },
-      appType: "spa"
+      server: { middlewareMode: true },
+      appType: "spa",
     });
-
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-
+    const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+    app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }
 
-  // IMPORTANT FOR RENDER
-  const PORT = process.env.PORT || 3000;
-
+  const PORT = 3000;
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }
 

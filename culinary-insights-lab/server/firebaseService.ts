@@ -25,7 +25,7 @@ const defaultDemoSurvey = {
   questions: [
     { 
       id: "q1", 
-      text: "Calificación de la experiencia (Escala 1 a 5, siendo 1 Deficiente y 5 Excelente)", 
+      text: "Calificación de la experiencia", 
       type: "scale", 
       min: 1, 
       max: 5,
@@ -67,13 +67,14 @@ const defaultPlataformaSurvey = {
         "Espacios de alto nivel",
         "Stands",
         "Galería de posters",
-        "Espacios de networking/interacción"
+        "Espacios de networking/interacción",
+        "Otro"
       ]
     },
     {
       id: "q3",
       section: "SECCIÓN 2 – EXPERIENCIA GENERAL",
-      text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026? (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026?",
       type: "scale",
       min: 1,
       max: 5,
@@ -93,7 +94,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q5",
-      text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades? (Escala de 0 a 10, siendo 0 Muy improbable y 10 Muy probable)",
+      text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades?",
       type: "scale",
       min: 0,
       max: 10,
@@ -103,7 +104,7 @@ const defaultPlataformaSurvey = {
     {
       id: "q6",
       section: "SECCIÓN 3 – CONTENIDO Y PERTINENCIA",
-      text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados? (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados?",
       type: "scale",
       min: 1,
       max: 5,
@@ -112,7 +113,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q7",
-      text: "¿Qué tan útiles fueron las experiencias, metodologías y conocimientos compartidos para su trabajo o territorio? (Escala 1 a 5, siendo 1 Nada útiles y 5 Muy útiles)",
+      text: "¿Qué tan útiles fueron las experiencias, metodologías y conocimientos compartidos para su trabajo o territorio?",
       type: "scale",
       min: 1,
       max: 5,
@@ -134,7 +135,7 @@ const defaultPlataformaSurvey = {
     {
       id: "q9_1",
       section: "SECCIÓN 4 – ORGANIZACIÓN Y LOGÍSTICA",
-      text: "Evaluación logística: Proceso de acreditación e ingreso (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Proceso de acreditación e ingreso",
       type: "scale",
       min: 1,
       max: 5,
@@ -143,7 +144,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q9_2",
-      text: "Evaluación logística: Organización general (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Organización general",
       type: "scale",
       min: 1,
       max: 5,
@@ -152,7 +153,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q9_3",
-      text: "Evaluación logística: Puntualidad de las sesiones (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Puntualidad de las sesiones",
       type: "scale",
       min: 1,
       max: 5,
@@ -161,7 +162,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q9_4",
-      text: "Evaluación logística: Calidad de los espacios y salas (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Calidad de los espacios y salas",
       type: "scale",
       min: 1,
       max: 5,
@@ -170,7 +171,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q9_5",
-      text: "Evaluación logística: Señalización y orientación (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Señalización y orientación",
       type: "scale",
       min: 1,
       max: 5,
@@ -179,7 +180,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q9_6",
-      text: "Evaluación logística: Atención del equipo organizador (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Atención del equipo organizador",
       type: "scale",
       min: 1,
       max: 5,
@@ -188,7 +189,7 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q9_7",
-      text: "Evaluación logística: Recursos audiovisuales y técnicos (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
+      text: "Evaluación logística: Recursos audiovisuales y técnicos",
       type: "scale",
       min: 1,
       max: 5,

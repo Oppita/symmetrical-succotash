@@ -73,12 +73,12 @@ const defaultPlataformaSurvey = {
     {
       id: "q3",
       section: "SECCIÓN 2 – EXPERIENCIA GENERAL",
-      text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026? (Escala 1 a 5, siendo 1 Deficiente y 5 Excelente)",
+      text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026? (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Deficiente",
-      maxLabel: "Excelente"
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
     },
     {
       id: "q4",
@@ -93,22 +93,22 @@ const defaultPlataformaSurvey = {
     },
     {
       id: "q5",
-      text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades? (Escala 1 a 5, siendo 1 Muy improbable y 5 Muy probable)",
+      text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades? (Escala de 0 a 10, siendo 0 Muy improbable y 10 Muy probable)",
       type: "scale",
-      min: 1,
-      max: 5,
+      min: 0,
+      max: 10,
       minLabel: "Muy improbable",
       maxLabel: "Muy probable"
     },
     {
       id: "q6",
       section: "SECCIÓN 3 – CONTENIDO Y PERTINENCIA",
-      text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados? (Escala 1 a 5, siendo 1 Deficiente y 5 Excelente)",
+      text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados? (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Deficiente",
-      maxLabel: "Excelente"
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
     },
     {
       id: "q7",
@@ -134,66 +134,66 @@ const defaultPlataformaSurvey = {
     {
       id: "q9_1",
       section: "SECCIÓN 4 – ORGANIZACIÓN Y LOGÍSTICA",
-      text: "Evaluación logística: Proceso de acreditación e ingreso (Escala 1 a 5, siendo 1 Malo y 5 Muy bueno)",
+      text: "Evaluación logística: Proceso de acreditación e ingreso (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Malo",
-      maxLabel: "Muy bueno"
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
     },
     {
       id: "q9_2",
-      text: "Evaluación logística: Organización general (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      text: "Evaluación logística: Organización general (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Mala",
+      minLabel: "Muy mala",
       maxLabel: "Muy buena"
     },
     {
       id: "q9_3",
-      text: "Evaluación logística: Puntualidad de las sesiones (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      text: "Evaluación logística: Puntualidad de las sesiones (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Mala",
+      minLabel: "Muy mala",
       maxLabel: "Muy buena"
     },
     {
       id: "q9_4",
-      text: "Evaluación logística: Calidad de los espacios y salas (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      text: "Evaluación logística: Calidad de los espacios y salas (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Mala",
+      minLabel: "Muy mala",
       maxLabel: "Muy buena"
     },
     {
       id: "q9_5",
-      text: "Evaluación logística: Señalización y orientación (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      text: "Evaluación logística: Señalización y orientación (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Mala",
+      minLabel: "Muy mala",
       maxLabel: "Muy buena"
     },
     {
       id: "q9_6",
-      text: "Evaluación logística: Atención del equipo organizador (Escala 1 a 5, siendo 1 Mala y 5 Muy buena)",
+      text: "Evaluación logística: Atención del equipo organizador (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Mala",
+      minLabel: "Muy mala",
       maxLabel: "Muy buena"
     },
     {
       id: "q9_7",
-      text: "Evaluación logística: Recursos audiovisuales y técnicos (Escala 1 a 5, siendo 1 Malo y 5 Muy bueno)",
+      text: "Evaluación logística: Recursos audiovisuales y técnicos (Escala 1 a 5, siendo 1 Muy mala y 5 Muy buena)",
       type: "scale",
       min: 1,
       max: 5,
-      minLabel: "Malo",
-      maxLabel: "Muy bueno"
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
     },
     {
       id: "q10",

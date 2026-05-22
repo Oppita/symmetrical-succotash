@@ -1,4 +1,3 @@
-```tsx
 import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
@@ -1028,4 +1027,3 @@ export default function Dashboard() {
     </div>
   );
 }
-```

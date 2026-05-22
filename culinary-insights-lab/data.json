@@ -1,0 +1,280 @@
+{
+  "surveys": {
+    "demo": {
+      "id": "demo",
+      "title": "Encuesta de Evaluación",
+      "questions": [
+        {
+          "id": "q1",
+          "text": "Calificación de la experiencia",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Deficiente",
+          "maxLabel": "Excelente"
+        },
+        {
+          "id": "q2",
+          "text": "Aspecto más valorado",
+          "type": "choice",
+          "options": [
+            "Atención",
+            "Calidad",
+            "Rapidez",
+            "Precio"
+          ]
+        }
+      ]
+    },
+    "plataforma2026": {
+      "id": "plataforma2026",
+      "title": "Evaluación Plataforma Nacional 2026",
+      "questions": [
+        {
+          "id": "q1",
+          "section": "SECCIÓN 1 – PARTICIPACIÓN",
+          "text": "¿Cuál fue su tipo de participación en el evento?",
+          "type": "choice",
+          "options": [
+            "Asistente",
+            "Ponente",
+            "Entidad pública",
+            "Academia",
+            "Organización social/comunitaria",
+            "Cooperación internacional",
+            "Sector privado",
+            "Otro"
+          ]
+        },
+        {
+          "id": "q2",
+          "text": "¿En qué espacios participó principalmente? (Puede seleccionar varios)",
+          "type": "checkbox",
+          "options": [
+            "Plenarias",
+            "Sesiones paralelas",
+            "Laboratorios",
+            "Espacios de alto nivel",
+            "Stands",
+            "Galería de posters",
+            "Espacios de networking/interacción",
+            "Otro"
+          ]
+        },
+        {
+          "id": "q3",
+          "section": "SECCIÓN 2 – EXPERIENCIA GENERAL",
+          "text": "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026?",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q4",
+          "text": "¿En qué medida el evento cumplió sus expectativas?",
+          "type": "choice",
+          "options": [
+            "Superó mis expectativas",
+            "Cumplió totalmente",
+            "Cumplió parcialmente",
+            "No cumplió"
+          ]
+        },
+        {
+          "id": "q5",
+          "text": "¿Qué tan probable es que recomiende este evento a otras personas o entidades?",
+          "type": "scale",
+          "min": 0,
+          "max": 10,
+          "minLabel": "Muy improbable",
+          "maxLabel": "Muy probable"
+        },
+        {
+          "id": "q6",
+          "section": "SECCIÓN 3 – CONTENIDO Y PERTINENCIA",
+          "text": "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados?",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q7",
+          "text": "¿Qué tan útiles fueron las experiencias, metodologías y conocimientos compartidos para su trabajo o territorio?",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Nada útiles",
+          "maxLabel": "Muy útiles"
+        },
+        {
+          "id": "q8",
+          "text": "¿Considera que la agenda abordó temas relevantes y actuales para la gestión del riesgo de desastres?",
+          "type": "choice",
+          "options": [
+            "Totalmente",
+            "En gran medida",
+            "Parcialmente",
+            "Muy poco",
+            "Nada"
+          ]
+        },
+        {
+          "id": "q9_1",
+          "section": "SECCIÓN 4 – ORGANIZACIÓN Y LOGÍSTICA",
+          "text": "Evaluación logística: Proceso de acreditación e ingreso",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q9_2",
+          "text": "Evaluación logística: Organización general",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q9_3",
+          "text": "Evaluación logística: Puntualidad de las sesiones",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q9_4",
+          "text": "Evaluación logística: Calidad de los espacios y salas",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q9_5",
+          "text": "Evaluación logística: Señalización y orientación",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q9_6",
+          "text": "Evaluación logística: Atención del equipo organizador",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q9_7",
+          "text": "Evaluación logística: Recursos audiovisuales y técnicos",
+          "type": "scale",
+          "min": 1,
+          "max": 5,
+          "minLabel": "Muy mala",
+          "maxLabel": "Muy buena"
+        },
+        {
+          "id": "q10",
+          "section": "SECCIÓN 5 – IMPACTO Y VALOR GENERADO",
+          "text": "¿Cuál fue el espacio o actividad más valiosa para usted y por qué?",
+          "type": "text",
+          "placeholder": "Escribe tu respuesta..."
+        },
+        {
+          "id": "q11",
+          "text": "¿Qué aprendizaje, herramienta o experiencia considera que podrá aplicar posteriormente en su organización, comunidad o territorio?",
+          "type": "text",
+          "placeholder": "Escribe tu respuesta..."
+        },
+        {
+          "id": "q12",
+          "section": "SECCIÓN 6 – OPORTUNIDADES DE MEJORA",
+          "text": "¿Qué aspecto considera que debería mejorarse para futuras versiones de la Plataforma Nacional?",
+          "type": "text",
+          "placeholder": "Escribe tu respuesta..."
+        },
+        {
+          "id": "q13",
+          "text": "¿Qué temas o enfoques le gustaría que se fortalecieran en próximas ediciones?",
+          "type": "text",
+          "placeholder": "Escribe tu respuesta..."
+        },
+        {
+          "id": "q14",
+          "section": "CIERRE",
+          "text": "Comentarios finales",
+          "type": "text",
+          "optional": true,
+          "placeholder": "Comentarios opcionales..."
+        }
+      ]
+    }
+  },
+  "responses": [
+    {
+      "id": "r1",
+      "surveyId": "plataforma2026",
+      "answers": {
+        "q1": "Asistente",
+        "q2": [
+          "Plenarias",
+          "Laboratorios"
+        ],
+        "q3": 5,
+        "q4": "Superó mis expectativas",
+        "q5": 9,
+        "q6": 5,
+        "q7": 4,
+        "q8": "Totalmente",
+        "q10": "Los laboratorios prácticos por la interacción",
+        "q11": "La metodología de diagnóstico territorial"
+      },
+      "timestamp": "2026-05-22T00:47:02.163Z"
+    },
+    {
+      "id": "r2",
+      "surveyId": "plataforma2026",
+      "answers": {
+        "q1": "Entidad pública",
+        "q2": [
+          "Plenarias",
+          "Espacios de alto nivel"
+        ],
+        "q3": 4,
+        "q4": "Cumplió totalmente",
+        "q5": 8,
+        "q6": 4,
+        "q7": 5,
+        "q8": "En gran medida",
+        "q10": "Los espacios de alto nivel para articulación interinstitucional",
+        "q11": "Herramientas de mapeo de riesgos de desastres"
+      },
+      "timestamp": "2026-05-22T00:47:02.163Z"
+    },
+    {
+      "id": "r_1779411444723_mc6nu",
+      "surveyId": "demo",
+      "answers": {
+        "q1": 1,
+        "q2": "Atención",
+        "_respondentName": "G",
+        "_respondentEmail": "H",
+        "_authorizedConsent": true
+      },
+      "timestamp": "2026-05-22T00:57:24.723Z"
+    }
+  ]
+}

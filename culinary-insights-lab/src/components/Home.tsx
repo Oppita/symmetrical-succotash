@@ -48,6 +48,8 @@ export default function Home() {
       const res = await fetch("/api/db-sync", { method: "POST" });
       const data = await res.json();
       setSyncLogs(data.logs || ["Error parseando respuesta"]);
+      fetchSurveys();
+      fetchDbStatus();
     } catch (e) {
       console.error(e);
       setSyncLogs(["Error fatal de red al intentar sincronizar."]);

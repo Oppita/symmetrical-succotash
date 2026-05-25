@@ -19,7 +19,7 @@ let isFirebaseEnabled = false;
 
 // Fallback high-performance local database structures
 const DATA_FILE = path.join(process.cwd(), "data.json");
-const defaultDemoSurvey = {
+export const defaultDemoSurvey = {
   id: "demo",
   title: "Encuesta de Evaluación",
   questions: [
@@ -36,7 +36,7 @@ const defaultDemoSurvey = {
   ]
 };
 
-const defaultPlataformaSurvey = {
+export const defaultPlataformaSurvey = {
   id: "plataforma2026",
   title: "Evaluación Plataforma Nacional 2026",
   questions: [
@@ -283,11 +283,12 @@ async function loadLocalDiskData() {
     if (parsed.surveys) {
       localSurveys = parsed.surveys;
     }
+    if (parsed.responses) {
+      localResponses = parsed.responses;
+    }
     // Force reset standard template surveys to ensure scale 1-5 and label updates are applied instantly
     localSurveys["demo"] = defaultDemoSurvey;
     localSurveys["plataforma2026"] = defaultPlataformaSurvey;
-    
-    if (parsed.responses) localResponses = parsed.responses;
     console.log("💾 Carga de datos locales desde data.json completada, plantillas estándar actualizadas.");
     await saveLocalDiskData();
   } catch (err) {

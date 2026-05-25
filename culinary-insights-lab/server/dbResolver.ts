@@ -20,7 +20,9 @@ import {
   getSupabaseResponsesForSurvey,
   saveSupabaseResponse,
   getSupabaseResponseCount,
-  triggerSupabaseSync
+  triggerSupabaseSync,
+  getSupabaseGlobalStats,
+  getSupabaseInitError
 } from "./supabaseService";
 
 // Global unified database startup
@@ -45,6 +47,10 @@ export function getDbProviderName(): string {
     return "Firebase Firestore";
   }
   return "Local Disk (data.json)";
+}
+
+export function getDbError(): string | null {
+  return getSupabaseInitError();
 }
 
 export function isDbConnected(): boolean {
@@ -106,4 +112,16 @@ export async function syncDatabase(): Promise<string[]> {
     return triggerSupabaseSync();
   }
   return ["❌ Sólo disponible para sincronización con Supabase (PostgreSQL)."];
+}
+
+export async function getDatabaseStats(): Promise<{ surveys: number, responses: number }> {
+  try {
+    if (getDbProviderName().includes("Supabase") || getDbProviderName().includes("Local")) {
+      return await getSupabaseGlobalStats();
+    }
+    const surveysCount = await getSurveys().then(s => s.length).catch(() => 0);
+    return { surveys: surveysCount, responses: -1 }; 
+  } catch (e) {
+    return { surveys: 0, responses: 0 };
+  }
 }

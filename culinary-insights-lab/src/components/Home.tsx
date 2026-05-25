@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, BarChart2, QrCode, Trash2, Edit2, Share2, Check } from "lucide-react";
+import { Plus, BarChart2, QrCode, Trash2, Edit2, Share2, Check, RefreshCw, XCircle } from "lucide-react";
 
 export default function Home() {
   const [surveys, setSurveys] = useState<any[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [dbStatus, setDbStatus] = useState<any>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncLogs, setSyncLogs] = useState<string[] | null>(null);
 
   const fetchSurveys = () => {
     fetch("/api/surveys")
@@ -19,6 +21,21 @@ export default function Home() {
       .then(res => res.json())
       .then(setDbStatus)
       .catch(console.error);
+  };
+
+  const handleSyncDatabase = async () => {
+    setIsSyncing(true);
+    setSyncLogs(null);
+    try {
+      const res = await fetch("/api/db-sync", { method: "POST" });
+      const data = await res.json();
+      setSyncLogs(data.logs || ["Error parseando respuesta"]);
+    } catch (e) {
+      console.error(e);
+      setSyncLogs(["Error fatal de red al intentar sincronizar."]);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   useEffect(() => {
@@ -65,19 +82,32 @@ export default function Home() {
           <p className="text-gray-500 font-medium mb-3">Gestiona tus cuestionarios, comparte enlaces y analiza los resultados.</p>
           
           {dbStatus && (
-            <div className="inline-flex items-center gap-2 bg-gray-50 hover:bg-gray-100/50 border border-gray-200 rounded-full px-3.5 py-1.5 transition-all text-[11px] font-bold tracking-wider uppercase select-none">
-              <span className={`relative flex h-2 w-2`}>
-                {dbStatus.connected && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus.connected ? "bg-emerald-500" : "bg-amber-500"}`}></span>
-              </span>
-              <span className={dbStatus.connected ? "text-emerald-700" : "text-amber-800"}>
-                {dbStatus.connected 
-                  ? `⚡ Firebase Activo (${dbStatus.projectId})` 
-                  : "💾 Servidor Local (data.json)"
-                }
-              </span>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase select-none">
+                <span className={`relative flex h-2 w-2`}>
+                  {dbStatus.connected && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  )}
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${dbStatus.connected ? "bg-emerald-500" : "bg-amber-500"}`}></span>
+                </span>
+                <span className={dbStatus.connected ? "text-emerald-700" : "text-amber-800"}>
+                  {dbStatus.connected 
+                    ? `⚡ Base de Datos: ${dbStatus.provider}` 
+                    : "💾 Servidor Local (data.json)"
+                  }
+                </span>
+              </div>
+              
+              {dbStatus.provider.includes("Supabase") && (
+                <button
+                  onClick={handleSyncDatabase}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-full px-4 py-1.5 transition-all text-[11px] font-bold tracking-wider uppercase disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <RefreshCw size={12} className={isSyncing ? "animate-spin" : ""} />
+                  {isSyncing ? "Sincronizando..." : "Forzar Sincronización"}
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -167,6 +197,49 @@ export default function Home() {
           </div>
         )}
       </div>
+      {/* Log Modal */}
+      {syncLogs && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh] border border-gray-100 animate-fadeIn">
+            <div className="bg-primary px-5 py-4 flex items-center justify-between">
+              <h3 className="text-white font-bold tracking-wide flex items-center gap-2">
+                <RefreshCw size={18} /> Resultados de Sincronización
+              </h3>
+              <button
+                onClick={() => setSyncLogs(null)}
+                className="text-white/80 hover:text-white transition-colors"
+                title="Cerrar"
+              >
+                <XCircle size={22} />
+              </button>
+            </div>
+            
+            <div className="p-5 flex-1 overflow-y-auto bg-gray-50/50">
+              <div className="space-y-2 font-mono text-xs">
+                {syncLogs.map((log, index) => (
+                  <div key={index} className={`p-2.5 rounded-lg border ${
+                    log.includes('✅') ? 'bg-emerald-50/50 text-emerald-800 border-emerald-100' :
+                    log.includes('⚠️') ? 'bg-amber-50/50 text-amber-800 border-amber-100' :
+                    log.includes('❌') ? 'bg-red-50/50 text-red-800 border-red-100' :
+                    'bg-white text-gray-700 border-gray-200'
+                  }`}>
+                    {log}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="p-4 bg-white border-t border-gray-100 flex justify-end">
+              <button
+                onClick={() => setSyncLogs(null)}
+                className="bg-gray-900 hover:bg-gray-800 text-white px-6 py-2 rounded-lg font-medium text-sm transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

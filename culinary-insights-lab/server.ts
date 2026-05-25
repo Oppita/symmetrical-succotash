@@ -13,7 +13,9 @@ import {
   getResponsesForSurvey,
   saveResponse,
   getResponseCount,
-  syncDatabase
+  syncDatabase,
+  getDatabaseStats,
+  getDbError
 } from "./server/dbResolver";
 
 const ai = process.env.GEMINI_API_KEY 
@@ -24,13 +26,52 @@ const app = express();
 app.use(express.json());
 
 // API STATUS
-app.get("/api/db-status", (req, res) => {
-  res.json({
-    connected: isDbConnected(),
-    provider: getDbProviderName(),
-    supabaseUrl: process.env.SUPABASE_URL ? "Configurado" : null,
-    firebaseProjectId: process.env.FIREBASE_PROJECT_ID || null
-  });
+app.get("/api/db-status", async (req, res) => {
+  try {
+    const stats = await getDatabaseStats();
+    res.json({
+      connected: isDbConnected(),
+      provider: getDbProviderName(),
+      supabaseUrl: process.env.SUPABASE_URL ? "Configurado" : null,
+      firebaseProjectId: process.env.FIREBASE_PROJECT_ID || null,
+      stats,
+      errorLog: getDbError()
+    });
+  } catch (error) {
+    res.json({ connected: false, error: "Error de estado" });
+  }
+});
+
+// TEST DATABASE CONNECTION ENDPOINT
+app.post("/api/db-retry", async (req, res) => {
+  try {
+    const hasUrl = !!process.env.SUPABASE_URL;
+    const hasKey = !!(process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY);
+    
+    let connectionLog = "Iniciando...";
+    if (!hasUrl || !hasKey) {
+      connectionLog = "Fallo: SUPABASE_URL o KEY no definidos en entorno.";
+    } else {
+      connectionLog = "Variables detectadas. Intentando conexión...";
+    }
+
+    await dbInit();
+    const stats = await getDatabaseStats();
+    
+    const dbErr = getDbError();
+    if (dbErr) connectionLog = `Fallo Supabase SQL: ${dbErr}`;
+
+    res.json({
+      connected: isDbConnected(),
+      provider: getDbProviderName(),
+      envOk: hasUrl && hasKey,
+      stats,
+      connectionLog,
+      errorLog: dbErr
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || "Fallo en reconexión." });
+  }
 });
 
 // SYNC DATABASE ENDPOINT

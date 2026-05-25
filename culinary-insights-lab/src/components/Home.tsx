@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, BarChart2, QrCode, Trash2, Edit2, Share2, Check, RefreshCw, XCircle } from "lucide-react";
+import { Plus, BarChart2, QrCode, Trash2, Edit2, Share2, Check, RefreshCw, XCircle, Database } from "lucide-react";
 
 export default function Home() {
   const [surveys, setSurveys] = useState<any[]>([]);
@@ -8,6 +8,9 @@ export default function Home() {
   const [dbStatus, setDbStatus] = useState<any>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncLogs, setSyncLogs] = useState<string[] | null>(null);
+  const [showDbInfo, setShowDbInfo] = useState(false);
+  const [dbTestLogs, setDbTestLogs] = useState<any>(null);
+  const [isTesting, setIsTesting] = useState(false);
 
   const fetchSurveys = () => {
     fetch("/api/surveys")
@@ -21,6 +24,21 @@ export default function Home() {
       .then(res => res.json())
       .then(setDbStatus)
       .catch(console.error);
+  };
+
+  const handleTestDatabase = async () => {
+    setIsTesting(true);
+    try {
+      const res = await fetch("/api/db-retry", { method: "POST" });
+      const data = await res.json();
+      setDbTestLogs(data);
+      fetchDbStatus(); // Update outer status
+    } catch (e) {
+      console.error(e);
+      setDbTestLogs({ error: "Fallo de conexión" });
+    } finally {
+      setIsTesting(false);
+    }
   };
 
   const handleSyncDatabase = async () => {
@@ -108,6 +126,21 @@ export default function Home() {
                   {isSyncing ? "Sincronizando..." : "Forzar Sincronización"}
                 </button>
               )}
+              {dbStatus.stats && (
+                <div className="inline-flex items-center gap-2 bg-white border border-gray-200 rounded-full px-3.5 py-1.5 text-[11px] font-bold tracking-wider uppercase select-none text-gray-500 shadow-sm">
+                  <BarChart2 size={12} />
+                  <span>
+                    {dbStatus.stats.surveys} Encuestas | {dbStatus.stats.responses > -1 ? `${dbStatus.stats.responses} Respuestas` : ""}
+                  </span>
+                </div>
+              )}
+              <button
+                onClick={() => { setShowDbInfo(true); setDbTestLogs(null); }}
+                className="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-900 text-white rounded-full px-4 py-1.5 transition-all text-[11px] font-bold tracking-wider uppercase shadow-sm"
+              >
+                <Database size={12} />
+                Diagnóstico BD
+              </button>
             </div>
           )}
         </div>
@@ -236,6 +269,106 @@ export default function Home() {
               >
                 Cerrar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* DB Info Modal */}
+      {showDbInfo && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-gray-100 animate-fadeIn">
+            <div className="bg-gray-900 px-5 py-4 flex items-center justify-between">
+              <h3 className="text-white font-bold tracking-wide flex items-center gap-2">
+                <Database size={18} /> Diagnóstico y Configuración SQL (Supabase)
+              </h3>
+              <button
+                onClick={() => setShowDbInfo(false)}
+                className="text-white/80 hover:text-white transition-colors"
+                title="Cerrar"
+              >
+                <XCircle size={22} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto bg-gray-50/50 space-y-6">
+              
+              <div className="bg-white p-5 rounded-xl border border-gray-200">
+                <h4 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 border-b pb-2">Prueba de Conexión en Vivo</h4>
+                <div className="flex items-center gap-4 mb-4">
+                  <button 
+                    onClick={handleTestDatabase} 
+                    disabled={isTesting}
+                    className="bg-primary hover:bg-primary-dark disabled:opacity-50 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all"
+                  >
+                    <RefreshCw size={14} className={isTesting ? "animate-spin" : ""} />
+                    {isTesting ? "Testeando..." : "Reintentar Conexión Supabase"}
+                  </button>
+                </div>
+                {dbTestLogs && dbTestLogs.envOk === false && (
+                  <div className="mb-4 bg-red-50 border border-red-200 text-red-800 p-4 rounded-lg text-sm">
+                    <strong>Faltan Variables de Entorno:</strong> No se han encontrado <code>SUPABASE_URL</code> y <code>SUPABASE_KEY</code> (o <code>SUPABASE_ANON_KEY</code> / <code>SUPABASE_SERVICE_ROLE_KEY</code>) en la configuración del proyecto. Ve a Variables de Entorno y añade ambas claves para poder conectar con Supabase.
+                  </div>
+                )}
+                {dbStatus && dbStatus.errorLog && (
+                  <div className="mb-4 bg-red-100 border border-red-300 text-red-900 p-4 rounded-lg text-sm font-bold shadow-sm">
+                    ❌ ERROR SUPABASE DETECTADO: {dbStatus.errorLog}
+                    <div className="mt-2 text-xs font-normal text-red-800">
+                      Revisa que tu <code>SUPABASE_URL</code> sea exactamente la URL del proyecto (Ej: <em>https://wxxmyxrzr.supabase.co</em>) sin rutas adicionales al final y que el <code>SUPABASE_KEY</code> no tenga espacios en blanco u otros caracteres accidentales por haber copiado mal.
+                    </div>
+                  </div>
+                )}
+                {dbTestLogs && (
+                  <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs whitespace-pre-wrap overflow-x-auto shadow-inner">
+                    {JSON.stringify(dbTestLogs, null, 2)}
+                  </div>
+                )}
+                {!dbTestLogs && dbStatus && (
+                  <div className="bg-gray-100 text-gray-700 p-4 rounded-lg font-mono text-xs overflow-x-auto">
+                    {JSON.stringify(dbStatus, null, 2)}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-amber-50 p-5 rounded-xl border border-amber-200">
+                <h4 className="text-sm font-bold text-amber-900 uppercase tracking-wide mb-2">Instrucciones Estrictas de SQL</h4>
+                <p className="text-xs text-amber-800 mb-3 leading-relaxed">
+                  Si estás usando Supabase y tienes problemas para guardar encuestas (o tus datos no se ven), 
+                  probablemente te faltan las tablas. Copia el siguiente código y ejecútalo en el <strong>Editor SQL</strong> de tu base de datos en Supabase:
+                </p>
+                <div className="relative group">
+                  <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg text-[11px] font-mono overflow-x-auto leading-relaxed shadow-inner">
+{`-- Crea la tabla encuestas
+CREATE TABLE IF NOT EXISTS surveys (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  questions JSONB NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Crea la tabla de respuestas
+CREATE TABLE IF NOT EXISTS responses (
+  id TEXT PRIMARY KEY,
+  survey_id TEXT REFERENCES surveys(id) ON DELETE CASCADE,
+  answers JSONB NOT NULL,
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- (VITAL) Deshabilita RLS para permitir acceso desde el backend node.js
+ALTER TABLE surveys DISABLE ROW LEVEL SECURITY;
+ALTER TABLE responses DISABLE ROW LEVEL SECURITY;`}
+                  </pre>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(`CREATE TABLE IF NOT EXISTS surveys (id TEXT PRIMARY KEY, title TEXT NOT NULL, questions JSONB NOT NULL, created_at TIMESTAMPTZ DEFAULT NOW()); CREATE TABLE IF NOT EXISTS responses (id TEXT PRIMARY KEY, survey_id TEXT REFERENCES surveys(id) ON DELETE CASCADE, answers JSONB NOT NULL, timestamp TIMESTAMPTZ DEFAULT NOW()); ALTER TABLE surveys DISABLE ROW LEVEL SECURITY; ALTER TABLE responses DISABLE ROW LEVEL SECURITY;`);
+                      alert("Contenido SQL copiado al portapapeles.");
+                    }}
+                    className="absolute top-2 right-2 bg-white/10 hover:bg-white/20 text-white px-2 py-1 flex items-center gap-1 rounded text-[10px] uppercase font-bold tracking-wider backdrop-blur cursor-pointer"
+                  >
+                    <Check size={12} /> Copiar Todo
+                  </button>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

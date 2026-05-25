@@ -17,10 +17,6 @@ async function loadFallbackData() {
     const parsed = JSON.parse(raw);
     if (parsed.surveys) localSurveys = parsed.surveys;
     if (parsed.responses) localResponses = parsed.responses;
-    
-    // Inject default templates mapped in case they were lost
-    localSurveys["demo"] = defaultDemoSurvey;
-    localSurveys["plataforma2026"] = defaultPlataformaSurvey;
   } catch (err) {
     // Ephemeral empty fallback
     localSurveys["demo"] = defaultDemoSurvey;

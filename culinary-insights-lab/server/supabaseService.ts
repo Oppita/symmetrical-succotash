@@ -1,237 +1,489 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { 
+  getFirestore, 
+  collection, 
+  doc, 
+  getDoc, 
+  getDocs, 
+  setDoc, 
+  deleteDoc,
+  query,
+  where,
+  Firestore 
+} from "firebase/firestore";
 import fs from "fs/promises";
 import path from "path";
 
-let supabase: SupabaseClient | null = null;
-let isSupabaseEnabled = false;
+let db: Firestore | null = null;
+let isFirebaseEnabled = false;
 
-// Fallback persistence config
+// Fallback high-performance local database structures
 const DATA_FILE = path.join(process.cwd(), "data.json");
-let localSurveys: Record<string, any> = {};
-let localResponses: any[] = [];
+export const defaultDemoSurvey = {
+  id: "demo",
+  title: "Encuesta de Evaluación",
+  questions: [
+    { 
+      id: "q1", 
+      text: "Calificación de la experiencia", 
+      type: "scale", 
+      min: 1, 
+      max: 5,
+      minLabel: "Deficiente",
+      maxLabel: "Excelente"
+    },
+    { id: "q2", text: "Aspecto más valorado", type: "choice", options: ["Atención", "Calidad", "Rapidez", "Precio"] }
+  ]
+};
 
-async function loadFallbackData() {
+export const defaultPlataformaSurvey = {
+  id: "plataforma2026",
+  title: "Evaluación Plataforma Nacional 2026",
+  questions: [
+    {
+      id: "q1",
+      section: "SECCIÓN 1 – PARTICIPACIÓN",
+      text: "¿Cuál fue su tipo de participación en el evento?",
+      type: "choice",
+      options: [
+        "Asistente",
+        "Ponente",
+        "Entidad pública",
+        "Academia",
+        "Organización social/comunitaria",
+        "Cooperación internacional",
+        "Sector privado",
+        "Otro"
+      ]
+    },
+    {
+      id: "q2",
+      text: "¿En qué espacios participó principalmente? (Puede seleccionar varios)",
+      type: "checkbox",
+      options: [
+        "Plenarias",
+        "Sesiones paralelas",
+        "Laboratorios",
+        "Espacios de alto nivel",
+        "Stands",
+        "Galería de posters",
+        "Espacios de networking/interacción",
+        "Otro"
+      ]
+    },
+    {
+      id: "q3",
+      section: "SECCIÓN 2 – EXPERIENCIA GENERAL",
+      text: "¿Cómo calificaría su experiencia general en la Plataforma Nacional 2026?",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q4",
+      text: "¿En qué medida el evento cumplió sus expectativas?",
+      type: "choice",
+      options: [
+        "Superó mis expectativas",
+        "Cumplió totalmente",
+        "Cumplió parcialmente",
+        "No cumplió"
+      ]
+    },
+    {
+      id: "q5",
+      text: "¿Qué tan probable es que recomiende este evento a otras personas o entidades?",
+      type: "scale",
+      min: 0,
+      max: 10,
+      minLabel: "Muy improbable",
+      maxLabel: "Muy probable"
+    },
+    {
+      id: "q6",
+      section: "SECCIÓN 3 – CONTENIDO Y PERTINENCIA",
+      text: "¿Cómo evalúa la calidad y pertinencia de los contenidos abordados?",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q7",
+      text: "¿Qué tan útiles fueron las experiencias, metodologías y conocimientos compartidos para su trabajo o territorio?",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Nada útiles",
+      maxLabel: "Muy útiles"
+    },
+    {
+      id: "q8",
+      text: "¿Considera que la agenda abordó temas relevantes y actuales para la gestión del riesgo de desastres?",
+      type: "choice",
+      options: [
+        "Totalmente",
+        "En gran medida",
+        "Parcialmente",
+        "Muy poco",
+        "Nada"
+      ]
+    },
+    {
+      id: "q9_1",
+      section: "SECCIÓN 4 – ORGANIZACIÓN Y LOGÍSTICA",
+      text: "Evaluación logística: Proceso de acreditación e ingreso",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_2",
+      text: "Evaluación logística: Organización general",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_3",
+      text: "Evaluación logística: Puntualidad de las sesiones",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_4",
+      text: "Evaluación logística: Calidad de los espacios y salas",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_5",
+      text: "Evaluación logística: Señalización y orientación",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_6",
+      text: "Evaluación logística: Atención del equipo organizador",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q9_7",
+      text: "Evaluación logística: Recursos audiovisuales y técnicos",
+      type: "scale",
+      min: 1,
+      max: 5,
+      minLabel: "Muy mala",
+      maxLabel: "Muy buena"
+    },
+    {
+      id: "q10",
+      section: "SECCIÓN 5 – IMPACTO Y VALOR GENERADO",
+      text: "¿Cuál fue el espacio o actividad más valiosa para usted y por qué?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q11",
+      text: "¿Qué aprendizaje, herramienta o experiencia considera que podrá aplicar posteriormente en su organización, comunidad o territorio?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q12",
+      section: "SECCIÓN 6 – OPORTUNIDADES DE MEJORA",
+      text: "¿Qué aspecto considera que debería mejorarse para futuras versiones de la Plataforma Nacional?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q13",
+      text: "¿Qué temas o enfoques le gustaría que se fortalecieran en próximas ediciones?",
+      type: "text",
+      placeholder: "Escribe tu respuesta..."
+    },
+    {
+      id: "q14",
+      section: "CIERRE",
+      text: "Comentarios finales",
+      type: "text",
+      optional: true,
+      placeholder: "Comentarios opcionales..."
+    }
+  ]
+};
+
+let localSurveys: Record<string, any> = {
+  "demo": defaultDemoSurvey,
+  "plataforma2026": defaultPlataformaSurvey
+};
+
+let localResponses: any[] = [
+  {
+    id: "r1",
+    surveyId: "plataforma2026",
+    answers: {
+      q1: "Asistente",
+      q2: ["Plenarias", "Laboratorios"],
+      q3: 5,
+      q4: "Superó mis expectativas",
+      q5: 9,
+      q6: 5,
+      q7: 4,
+      q8: "Totalmente",
+      q10: "Los laboratorios prácticos por la interacción",
+      q11: "La metodología de diagnóstico territorial"
+    },
+    timestamp: new Date().toISOString()
+  },
+  {
+    id: "r2",
+    surveyId: "plataforma2026",
+    answers: {
+      q1: "Entidad pública",
+      q2: ["Plenarias", "Espacios de alto nivel"],
+      q3: 4,
+      q4: "Cumplió totalmente",
+      q5: 8,
+      q6: 4,
+      q7: 5,
+      q8: "En gran medida",
+      q10: "Los espacios de alto nivel para articulación interinstitucional",
+      q11: "Herramientas de mapeo de riesgos de desastres"
+    },
+    timestamp: new Date().toISOString()
+  }
+];
+
+// Helper to load fallback disk data
+async function loadLocalDiskData() {
   try {
     const raw = await fs.readFile(DATA_FILE, "utf-8");
     const parsed = JSON.parse(raw);
-    if (parsed.surveys) localSurveys = parsed.surveys;
-    if (parsed.responses) localResponses = parsed.responses;
+    if (parsed.surveys) {
+      localSurveys = parsed.surveys;
+    }
+    if (parsed.responses) {
+      localResponses = parsed.responses;
+    }
+    // Force reset standard template surveys to ensure scale 1-5 and label updates are applied instantly
+    localSurveys["demo"] = defaultDemoSurvey;
+    localSurveys["plataforma2026"] = defaultPlataformaSurvey;
+    console.log("💾 Carga de datos locales desde data.json completada, plantillas estándar actualizadas.");
+    await saveLocalDiskData();
   } catch (err) {
-    // Ephemeral empty fallback
+    // Si no existe, creamos el archivo inicial para que persista
+    await saveLocalDiskData();
   }
 }
 
-async function saveFallbackData() {
+// Helper to save fallback disk data
+async function saveLocalDiskData() {
   try {
     await fs.writeFile(
-      DATA_FILE,
-      JSON.stringify({ surveys: localSurveys, responses: localResponses }, null, 2),
+      DATA_FILE, 
+      JSON.stringify({ surveys: localSurveys, responses: localResponses }, null, 2), 
       "utf-8"
     );
   } catch (err) {
-    console.error("❌ Error guardando fallback local:", err);
+    console.error("❌ Error guardando datos locales en data.json:", err);
   }
 }
 
-export async function supabaseInit(): Promise<boolean> {
-  await loadFallbackData();
+// Firestore operations error handler
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
 
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId: string | null;
+  }
+}
 
-  if (url && key) {
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: null // Server-side environment
+    },
+    operationType,
+    path
+  };
+  console.error('🔥 Error de Firestore Detectado:', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
+// Global initialization
+export async function dbInit() {
+  await loadLocalDiskData();
+
+  const apiKey = process.env.FIREBASE_API_KEY;
+  const authDomain = process.env.FIREBASE_AUTH_DOMAIN;
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const storageBucket = process.env.FIREBASE_STORAGE_BUCKET;
+  const messagingSenderId = process.env.FIREBASE_MESSAGING_SENDER_ID;
+  const appId = process.env.FIREBASE_APP_ID;
+
+  if (projectId && apiKey) {
     try {
-      supabase = createClient(url, key, {
-        auth: {
-          persistSession: false
-        }
-      });
-      isSupabaseEnabled = true;
-
-      // Realizar una consulta de prueba ultra rápida para verificar conexión y existencia de tablas
-      const { error } = await supabase.from("surveys").select("id").limit(1);
+      const config = {
+        apiKey,
+        authDomain,
+        projectId,
+        storageBucket,
+        messagingSenderId,
+        appId
+      };
+      const app = getApps().length === 0 ? initializeApp(config) : getApp();
+      db = getFirestore(app);
+      isFirebaseEnabled = true;
+      console.log("🔥 ¡Conexión con Firebase Firestore establecida con éxito!");
       
-      if (error) {
-        if (error.code === "PGRST116" || error.message.includes("does not exist") || error.message.includes("relation")) {
-          console.warn("\n🚨 [SUPABASE] Conectado exitosamente pero las tablas 'surveys' o 'responses' NO existen en tu base de datos postgres.");
-          console.warn("👉 Por favor ejecuta el siguiente script SQL en el editor de SQL de Supabase:\n");
-          console.warn(`
-------------------------------------------------------------------
-CREATE TABLE surveys (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  questions JSONB NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE responses (
-  id TEXT PRIMARY KEY,
-  survey_id TEXT REFERENCES surveys(id) ON DELETE CASCADE,
-  answers JSONB NOT NULL,
-  timestamp TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Deshabilitar RLS para permitir accesos directos desde el backend
-ALTER TABLE surveys DISABLE ROW LEVEL SECURITY;
-ALTER TABLE responses DISABLE ROW LEVEL SECURITY;
-------------------------------------------------------------------
-          \n`);
-          console.warn("⚠️ Utilizando 'Local Fallback' de manera provisional hasta que crees las tablas.");
-          isSupabaseEnabled = false;
-        } else {
-          throw error;
-        }
-      } else {
-        console.log("⚡ ¡Conexión con Supabase establecida con éxito y tablas validadas!");
-        // We will trigger a sync on start
-        await triggerSupabaseSync();
+      // Auto-update standard surveys to Firestore to ensure boundaries and labels are current
+      for (const surveyId of Object.keys(localSurveys)) {
+        const docRef = doc(db, "surveys", surveyId);
+        await setDoc(docRef, localSurveys[surveyId]);
       }
-    } catch (err: any) {
-      console.error("⚠️ Falló la conexión inicial a Supabase. Error:", err.message || err);
-      isSupabaseEnabled = false;
+      console.log("⚡ Encuestas estándar sincronizadas con Firebase Firestore.");
+    } catch (err) {
+      console.error("⚠️ Falló la conexión inicial a Firebase. Utilizando fallback local:", err);
+      isFirebaseEnabled = false;
     }
   } else {
-    console.log("ℹ️ No se detectaron credenciales completas de Supabase (SUPABASE_URL / SUPABASE_KEY).");
+    console.warn("⚠️ Variables de Firebase ausentes en el entorno. Funcionando en Modo de Persistencia Local (data.json).");
   }
-
-  return isSupabaseEnabled;
 }
 
-export async function triggerSupabaseSync(): Promise<string[]> {
-  const logs: string[] = [];
-  if (!isSupabaseEnabled || !supabase) {
-    logs.push("❌ Supabase no está configurado o conectado.");
-    return logs;
-  }
-
-  logs.push("⏳ Iniciando sincronización de datos locales hacia Supabase...");
-  
-  // Reload fallback data to ensure we have the latest
-  await loadFallbackData();
-
-  let surveysCount = 0;
-  for (const survey of Object.values(localSurveys)) {
-    const { error } = await supabase.from("surveys").upsert({
-      id: survey.id,
-      title: survey.title,
-      questions: survey.questions
-    });
-    if (error) {
-      logs.push(`⚠️ Error subiendo encuesta ${survey.id}: ${error.message}`);
-    } else {
-      surveysCount++;
-    }
-  }
-  logs.push(`✅ ${surveysCount} encuestas sincronizadas.`);
-
-  let responsesCount = 0;
-  for (const resp of localResponses) {
-    const { error: syncErr } = await supabase.from("responses").upsert({
-      id: resp.id,
-      survey_id: resp.surveyId,
-      answers: resp.answers ? (resp.answers.answers ? resp.answers : { answers: resp.answers, _respondentName: resp._respondentName, _respondentEmail: resp._respondentEmail, _authorizedConsent: resp._authorizedConsent }) : resp,
-      timestamp: resp.timestamp || new Date().toISOString()
-    }, { onConflict: "id" });
-    
-    if (syncErr) {
-      logs.push(`⚠️ Error subiendo respuesta ${resp.id}: ${syncErr.message}`);
-    } else {
-      responsesCount++;
-    }
-  }
-  logs.push(`✅ ${responsesCount} respuestas sincronizadas.`);
-  logs.push("🏁 Sincronización finalizada.");
-  
-  return logs;
+export function isFirebaseConnected(): boolean {
+  return isFirebaseEnabled && db !== null;
 }
 
-export function isSupabaseConnected(): boolean {
-  return isSupabaseEnabled && supabase !== null;
-}
-
-export async function getSupabaseSurveys(): Promise<any[]> {
-  if (isSupabaseConnected() && supabase) {
-    const { data, error } = await supabase.from("surveys").select("*");
-    if (!error && data) {
-      return data;
+// Unified Database Coordinator Layer
+export async function getSurveys(): Promise<any[]> {
+  if (isFirebaseConnected() && db) {
+    try {
+      const colRef = collection(db, "surveys");
+      const snapshot = await getDocs(colRef);
+      const surveysList: any[] = [];
+      snapshot.forEach(doc => {
+        surveysList.push(doc.data());
+      });
+      return surveysList;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, "surveys");
     }
-    console.error("❌ Error getSupabaseSurveys:", error);
   }
   return Object.values(localSurveys);
 }
 
-export async function getSupabaseSurveyById(id: string): Promise<any | null> {
-  if (isSupabaseConnected() && supabase) {
-    const { data, error } = await supabase.from("surveys").select("*").eq("id", id).maybeSingle();
-    if (!error && data) {
-      return data;
+export async function getSurveyById(id: string): Promise<any | null> {
+  if (isFirebaseConnected() && db) {
+    try {
+      const docRef = doc(db, "surveys", id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return docSnap.data();
+      }
+      return null;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.GET, `surveys/${id}`);
     }
-    if (error) console.error(`❌ Error getSupabaseSurveyById (${id}):`, error);
   }
   return localSurveys[id] || null;
 }
 
-export async function saveSupabaseSurvey(id: string, title: string, questions: any[]): Promise<any> {
+export async function saveSurvey(id: string, title: string, questions: any[]): Promise<any> {
   const surveyData = { id, title, questions };
-  if (isSupabaseConnected() && supabase) {
-    const { error } = await supabase.from("surveys").upsert(surveyData);
-    if (error) {
-      console.error(`❌ Error saveSupabaseSurvey (${id}):`, error);
-    } else {
-      // También guardamos localmente como caché de respaldo
-      localSurveys[id] = surveyData;
-      await saveFallbackData();
-      return surveyData;
+  if (isFirebaseConnected() && db) {
+    try {
+      const docRef = doc(db, "surveys", id);
+      await setDoc(docRef, surveyData);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `surveys/${id}`);
     }
   }
   localSurveys[id] = surveyData;
-  await saveFallbackData();
+  await saveLocalDiskData();
   return surveyData;
 }
 
-export async function deleteSupabaseSurvey(id: string): Promise<boolean> {
+export async function deleteSurvey(id: string): Promise<boolean> {
   let found = false;
-  if (isSupabaseConnected() && supabase) {
-    const { error } = await supabase.from("surveys").delete().eq("id", id);
-    if (!error) {
+  if (isFirebaseConnected() && db) {
+    try {
+      const docRef = doc(db, "surveys", id);
+      await deleteDoc(docRef);
+      
+      // Delete associated responses from Firestore as well
+      const resColRef = collection(db, "responses");
+      const q = query(resColRef, where("surveyId", "==", id));
+      const querySnapshot = await getDocs(q);
+      for (const responseDoc of querySnapshot.docs) {
+        await deleteDoc(doc(db, "responses", responseDoc.id));
+      }
       found = true;
-    } else {
-      console.error(`❌ Error deleteSupabaseSurvey (${id}):`, error);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.DELETE, `surveys/${id}`);
     }
   }
   
   if (localSurveys[id]) {
     delete localSurveys[id];
     localResponses = localResponses.filter(r => r.surveyId !== id);
-    await saveFallbackData();
+    await saveLocalDiskData();
     found = true;
   }
   return found;
 }
 
-export async function getSupabaseResponsesForSurvey(surveyId: string): Promise<any[]> {
-  if (isSupabaseConnected() && supabase) {
-    const { data, error } = await supabase.from("responses").select("*").eq("survey_id", surveyId);
-    if (!error && data) {
-      // Mapear "survey_id" de DB de vuelta a camelCase "surveyId" para consistencia con el front
-      return data.map(r => {
-        // En caso de que se haya guardado con nesting o plano
-        const hasNested = r.answers && r.answers.answers !== undefined;
-        const payload = hasNested ? r.answers : { answers: r.answers };
-        return {
-          id: r.id,
-          surveyId: r.survey_id,
-          ...payload,
-          timestamp: r.timestamp
-        };
+export async function getResponsesForSurvey(surveyId: string): Promise<any[]> {
+  if (isFirebaseConnected() && db) {
+    try {
+      const colRef = collection(db, "responses");
+      const q = query(colRef, where("surveyId", "==", surveyId));
+      const snapshot = await getDocs(q);
+      const list: any[] = [];
+      snapshot.forEach(doc => {
+        list.push(doc.data());
       });
+      return list;
+    } catch (err) {
+      handleFirestoreError(err, OperationType.LIST, `responses?surveyId=${surveyId}`);
     }
-    console.error(`❌ Error getSupabaseResponsesForSurvey (${surveyId}):`, error);
   }
   return localResponses.filter(r => r.surveyId === surveyId);
 }
 
-export async function saveSupabaseResponse(surveyId: string, answers: any): Promise<boolean> {
+export async function saveResponse(surveyId: string, answers: any): Promise<boolean> {
   const responseId = `r_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
   const responseData = {
     id: responseId,
@@ -240,38 +492,27 @@ export async function saveSupabaseResponse(surveyId: string, answers: any): Prom
     timestamp: new Date().toISOString()
   };
 
-  if (isSupabaseConnected() && supabase) {
-    // Mapeamos a snake_case para la DB de postgres
-    const { error } = await supabase.from("responses").insert({
-      id: responseId,
-      survey_id: surveyId,
-      answers,
-      timestamp: responseData.timestamp
-    });
-    if (error) {
-      console.error("❌ Error saveSupabaseResponse:", error);
-    } else {
-      localResponses.push(responseData);
-      await saveFallbackData();
-      return true;
+  if (isFirebaseConnected() && db) {
+    try {
+      const docRef = doc(db, "responses", responseId);
+      await setDoc(docRef, responseData);
+    } catch (err) {
+      handleFirestoreError(err, OperationType.WRITE, `responses/${responseId}`);
     }
   }
-
   localResponses.push(responseData);
-  await saveFallbackData();
+  await saveLocalDiskData();
   return true;
 }
 
-export async function getSupabaseResponseCount(surveyId: string): Promise<number> {
-  if (isSupabaseConnected() && supabase) {
-    const { count, error } = await supabase
-      .from("responses")
-      .select("*", { count: "exact", head: true })
-      .eq("survey_id", surveyId);
-    if (!error && count !== null) {
-      return count;
+export async function getResponseCount(surveyId: string): Promise<number> {
+  if (isFirebaseConnected() && db) {
+    try {
+      const list = await getResponsesForSurvey(surveyId);
+      return list.length;
+    } catch (err) {
+      return 0;
     }
-    console.error(`❌ Error getSupabaseResponseCount (${surveyId}):`, error);
   }
   return localResponses.filter(r => r.surveyId === surveyId).length;
 }

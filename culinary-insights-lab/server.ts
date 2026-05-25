@@ -4,15 +4,17 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI, Type } from "@google/genai";
 import {
   dbInit,
-  isFirebaseConnected,
+  isDbConnected,
+  getDbProviderName,
   getSurveys,
   getSurveyById,
   saveSurvey,
   deleteSurvey,
   getResponsesForSurvey,
   saveResponse,
-  getResponseCount
-} from "./server/firebaseService";
+  getResponseCount,
+  syncDatabase
+} from "./server/dbResolver";
 
 const ai = process.env.GEMINI_API_KEY 
     ? new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
@@ -24,10 +26,22 @@ app.use(express.json());
 // API STATUS
 app.get("/api/db-status", (req, res) => {
   res.json({
-    connected: isFirebaseConnected(),
-    projectId: process.env.FIREBASE_PROJECT_ID || null,
-    provider: isFirebaseConnected() ? "Firebase Firestore" : "Local Disk Fallback (data.json)"
+    connected: isDbConnected(),
+    provider: getDbProviderName(),
+    supabaseUrl: process.env.SUPABASE_URL ? "Configurado" : null,
+    firebaseProjectId: process.env.FIREBASE_PROJECT_ID || null
   });
+});
+
+// SYNC DATABASE ENDPOINT
+app.post("/api/db-sync", async (req, res) => {
+  try {
+    const logs = await syncDatabase();
+    res.json({ logs });
+  } catch (error: any) {
+    console.error("Error during DB sync:", error);
+    res.status(500).json({ error: error.message || "Failed to synchronize database" });
+  }
 });
 
 // GET ALL SURVEYS

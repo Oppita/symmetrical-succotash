@@ -1,14 +1,15 @@
-import { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { RefreshCw, Sparkles, QrCode, ArrowLeft, Share2, Download, List, MessageSquare, Award, Edit2, Check, ExternalLink, ShieldCheck, Users } from "lucide-react";
+import { RefreshCw, Sparkles, QrCode, ArrowLeft, Share2, Download, Upload, List, MessageSquare, Award, Edit2, Check, ExternalLink, ShieldCheck, Users } from "lucide-react";
 
 export default function Dashboard() {
   const { id } = useParams();
   const [responses, setResponses] = useState<any[]>([]);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [surveyTitle, setSurveyTitle] = useState("Resultados de Encuesta");
   const [surveyData, setSurveyData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
@@ -378,6 +379,105 @@ export default function Dashboard() {
     document.body.removeChild(downloadLink);
   };
 
+  const parseCSVLine = (text: string) => {
+    const re = /"([^"]*(?:""[^"]*)*)"|([^,]+)/g;
+    let result = [];
+    let match;
+    while ((match = re.exec(text)) !== null) {
+      if (match[1] !== undefined) {
+        result.push(match[1].replace(/""/g, '"'));
+      } else {
+        result.push(match[2] || "");
+      }
+    }
+    return result;
+  };
+
+  const handleImportCSV = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const file = evt.target.files?.[0];
+    if (!file || !surveyData) return;
+
+    setImporting(true);
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const text = e.target?.result as string;
+        if (!text) return;
+        
+        const lines = text.split(/\r?\n/).filter(line => line.trim().length > 0);
+        if (lines.length <= 1) {
+            alert("El archivo CSV no tiene datos o está vacío.");
+            return;
+        }
+        
+        const importedResponses = [];
+        for (let i = 1; i < lines.length; i++) {
+           const cols = parseCSVLine(lines[i]);
+           if (cols.length < 5) continue; // skip malformed lines
+           
+           const name = cols[2] !== "Anónimo" ? cols[2] : "";
+           const email = cols[3] !== "No registrado" ? cols[3] : "";
+           const consented = cols[4]?.toLowerCase() === "sí" || cols[4]?.toLowerCase() === "si" || cols[4] === "true";
+           
+           const answers: any = {
+             _respondentName: name,
+             _respondentEmail: email,
+             _authorizedConsent: consented
+           };
+
+           let colIndex = 5;
+           surveyData.questions.forEach((q: any) => {
+             let val = cols[colIndex++];
+             
+             if (val !== undefined && val !== "") {
+                if (q.type === "checkbox") {
+                   answers[q.id] = val.split(" ; ").map(v => v.trim()).filter(v => v);
+                } else if (q.type === "scale") {
+                   answers[q.id] = Number(val);
+                } else {
+                   answers[q.id] = val;
+                }
+             }
+             
+             if (q.id === "q1") {
+                 const spec = cols[colIndex++];
+                 if (spec) answers["q1_spec"] = spec;
+             }
+             if (q.id === "q2") {
+                 const spec = cols[colIndex++];
+                 if (spec) answers["q2_spec"] = spec;
+             }
+           });
+           
+           importedResponses.push(answers);
+        }
+        
+        if (importedResponses.length > 0) {
+            const res = await fetch(`/api/survey/${surveyId}/import-responses`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ responses: importedResponses })
+            });
+            if (res.ok) {
+                alert(`¡Se importaron ${importedResponses.length} respuestas correctamente!`);
+                fetchData();
+            } else {
+                alert("Hubo un problema al importar las respuestas.");
+            }
+        } else {
+            alert("No se encontraron respuestas válidas para importar.");
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Ocurrió un error leyendo el archivo.");
+      } finally {
+        setImporting(false);
+      }
+    };
+    reader.readAsText(file, "utf-8");
+    evt.target.value = "";
+  };
+
   const downloadQR = () => {
     const canvas = document.getElementById("qrCodeEl") as HTMLCanvasElement;
     if (!canvas) return;
@@ -499,6 +599,11 @@ export default function Dashboard() {
                     >
                         <Download size={14} /> Descargar QR para Imprimir
                     </button>
+                    <label className="flex items-center justify-center gap-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-800 py-2 rounded-lg font-medium text-xs transition-colors shadow-sm cursor-pointer relative overflow-hidden">
+                        {importing ? <RefreshCw size={14} className="animate-spin" /> : <Upload size={14} />}
+                        {importing ? 'Importando...' : 'Importar Respuestas (CSV)'}
+                        <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} disabled={importing} />
+                    </label>
                     <a href={whatsappUrl} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 bg-[#25d366] hover:bg-[#20bd5a] text-white py-2 rounded-lg font-medium text-xs transition-colors shadow-sm">
                         <Share2 size={14} /> Compartir por WhatsApp
                     </a>

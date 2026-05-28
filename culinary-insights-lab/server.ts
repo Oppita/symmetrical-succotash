@@ -163,6 +163,28 @@ app.delete("/api/survey/:id", async (req, res) => {
 });
 
 // POST SURVEY RESPONSE SUBMISSION
+app.post("/api/survey/:id/import-responses", async (req, res) => {
+  try {
+    const surveyId = req.params.id;
+    const { responses } = req.body;
+    
+    if (!Array.isArray(responses)) {
+        return res.status(400).json({ error: "Invalid data format. Expected an array of responses." });
+    }
+
+    // Save each imported response
+    for (const r of responses) {
+       await saveResponse(surveyId, r);
+    }
+    
+    console.log(`[IMPORT] Importadas ${responses.length} respuestas a la encuesta ${surveyId}`);
+    res.json({ success: true, count: responses.length });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST SURVEY RESPONSE SUBMISSION
 app.post("/api/survey/:id/response", async (req, res) => {
   try {
     const surveyId = req.params.id;

@@ -366,7 +366,7 @@ export async function dbInit() {
       const app = getApps().length === 0 ? initializeApp(config) : getApp();
       db = getFirestore(app);
       isFirebaseEnabled = true;
-      console.log("🔥 ¡Conexión con Firebase Firestore establecida con éxito!");
+      console.log("🔥 [AUTH] Autenticación a Firebase Firestore establecida. (Proyecto: " + projectId + ")");
       
       // Auto-update standard surveys to Firestore to ensure boundaries and labels are current
       for (const surveyId of Object.keys(localSurveys)) {
@@ -397,6 +397,7 @@ export async function getSurveys(): Promise<any[]> {
       snapshot.forEach(doc => {
         surveysList.push(doc.data());
       });
+      console.log(`📡 [FIREBASE DATA] Extraídas ${surveysList.length} encuestas conectadas.`);
       return surveysList;
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, "surveys");
@@ -475,6 +476,7 @@ export async function getResponsesForSurvey(surveyId: string): Promise<any[]> {
       snapshot.forEach(doc => {
         list.push(doc.data());
       });
+      console.log(`📡 [FIREBASE DATA] Extraídas ${list.length} respuestas de la encuesta origen ${surveyId}.`);
       return list;
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, `responses?surveyId=${surveyId}`);

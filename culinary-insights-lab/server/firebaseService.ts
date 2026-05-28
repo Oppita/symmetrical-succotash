@@ -9,7 +9,8 @@ import {
   deleteDoc,
   query,
   where,
-  Firestore 
+  Firestore,
+  terminate
 } from "firebase/firestore";
 import fs from "fs/promises";
 import path from "path";
@@ -369,14 +370,26 @@ export async function dbInit() {
       console.log("🔥 [AUTH] Autenticación a Firebase Firestore establecida. (Proyecto: " + projectId + ")");
       
       // Auto-update standard surveys to Firestore to ensure boundaries and labels are current
-      for (const surveyId of Object.keys(localSurveys)) {
-        const docRef = doc(db, "surveys", surveyId);
-        await setDoc(docRef, localSurveys[surveyId]);
+      try {
+        for (const surveyId of Object.keys(localSurveys)) {
+          const docRef = doc(db, "surveys", surveyId);
+          await setDoc(docRef, localSurveys[surveyId]);
+        }
+        console.log("⚡ Encuestas estándar sincronizadas con Firebase Firestore.");
+      } catch (writeErr) {
+        throw writeErr; // Bubble to outer catch
       }
-      console.log("⚡ Encuestas estándar sincronizadas con Firebase Firestore.");
     } catch (err) {
       console.error("⚠️ Falló la conexión inicial a Firebase. Utilizando fallback local:", err);
       isFirebaseEnabled = false;
+      if (db) {
+        try {
+          await terminate(db);
+        } catch (e) {
+          console.error("⚠️ Error terminando Firebase Firestore:", e);
+        }
+      }
+      db = null;
     }
   } else {
     console.warn("⚠️ Variables de Firebase ausentes en el entorno. Funcionando en Modo de Persistencia Local (data.json).");

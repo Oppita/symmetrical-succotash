@@ -7,6 +7,7 @@ import {
   deleteSurvey as deleteFirebaseSurvey,
   getResponsesForSurvey as getFirebaseResponses,
   saveResponse as saveFirebaseResponse,
+  deleteResponse as deleteFirebaseResponse,
   getResponseCount as getFirebaseResponseCount
 } from "./firebaseService";
 
@@ -19,6 +20,7 @@ import {
   deleteSupabaseSurvey,
   getSupabaseResponsesForSurvey,
   saveSupabaseResponse,
+  deleteSupabaseResponse,
   getSupabaseResponseCount,
   triggerSupabaseSync,
   getSupabaseGlobalStats,
@@ -105,6 +107,13 @@ export async function getResponseCount(surveyId: string): Promise<number> {
     return getSupabaseResponseCount(surveyId);
   }
   return getFirebaseResponseCount(surveyId);
+}
+
+export async function deleteResponse(responseId: string): Promise<boolean> {
+  if (isSupabaseConnected()) {
+    return deleteSupabaseResponse(responseId);
+  }
+  return deleteFirebaseResponse(responseId);
 }
 
 export async function syncDatabase(): Promise<string[]> {

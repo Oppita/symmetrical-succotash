@@ -321,6 +321,27 @@ export async function saveSupabaseResponse(surveyId: string, answers: any): Prom
   return true;
 }
 
+export async function deleteSupabaseResponse(responseId: string): Promise<boolean> {
+  let found = false;
+  if (isSupabaseConnected() && supabase) {
+    const { error } = await supabase.from("responses").delete().eq("id", responseId);
+    if (error) {
+      console.error(`❌ Error deleteSupabaseResponse (${responseId}):`, error);
+    } else {
+      found = true;
+    }
+  }
+
+  const initialLength = localResponses.length;
+  localResponses = localResponses.filter(r => r.id !== responseId);
+  if (localResponses.length < initialLength) {
+    found = true;
+    await saveFallbackData();
+  }
+
+  return found;
+}
+
 export async function getSupabaseResponseCount(surveyId: string): Promise<number> {
   if (isSupabaseConnected() && supabase) {
     const { count, error } = await supabase

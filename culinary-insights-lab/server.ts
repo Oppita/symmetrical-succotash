@@ -393,7 +393,7 @@ Usa Markdown profesional.
       }
 
       const response = await ai.models.generateContent({
-        model: model || "gemini-2.0-flash",
+        model: model || "gemini-2.5-flash",
         contents: prompt
       });
 
@@ -522,7 +522,7 @@ Devuelve JSON.
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -599,10 +599,8 @@ async function startServer() {
 
   }
 
-  const PORT = Number(process.env.PORT) || 3000;
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on port ${PORT}`);
+  app.listen(3000, "0.0.0.0", () => {
+    console.log(`Server running on port 3000`);
   });
 }
 

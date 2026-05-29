@@ -376,8 +376,8 @@ export async function dbInit() {
           await setDoc(docRef, localSurveys[surveyId]);
         }
         console.log("⚡ Encuestas estándar sincronizadas con Firebase Firestore.");
-      } catch (writeErr) {
-        throw writeErr; // Bubble to outer catch
+      } catch (writeErr: any) {
+        console.error("⚠️ Error grabando encuestas iniciales en Firestore (posible problema de permisos). Continuando conexión con Firestore:", writeErr.message);
       }
     } catch (err) {
       console.error("⚠️ Falló la conexión inicial a Firebase. Utilizando fallback local:", err);
@@ -412,8 +412,8 @@ export async function getSurveys(): Promise<any[]> {
       });
       console.log(`📡 [FIREBASE DATA] Extraídas ${surveysList.length} encuestas conectadas.`);
       return surveysList;
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, "surveys");
+    } catch (err: any) {
+      console.error("⚠️ Fallo leyendo de Firebase (Surveys). Fallback Local:", err.message);
     }
   }
   return Object.values(localSurveys);
@@ -428,8 +428,8 @@ export async function getSurveyById(id: string): Promise<any | null> {
         return docSnap.data();
       }
       return null;
-    } catch (err) {
-      handleFirestoreError(err, OperationType.GET, `surveys/${id}`);
+    } catch (err: any) {
+      console.error(`⚠️ Fallo leyendo de Firebase (Survey ${id}). Fallback Local:`, err.message);
     }
   }
   return localSurveys[id] || null;
@@ -441,8 +441,8 @@ export async function saveSurvey(id: string, title: string, questions: any[]): P
     try {
       const docRef = doc(db, "surveys", id);
       await setDoc(docRef, surveyData);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `surveys/${id}`);
+    } catch (err: any) {
+      console.error(`⚠️ Fallo escribiendo encuesta en Firebase (${id}):`, err.message);
     }
   }
   localSurveys[id] = surveyData;
@@ -465,8 +465,8 @@ export async function deleteSurvey(id: string): Promise<boolean> {
         await deleteDoc(doc(db, "responses", responseDoc.id));
       }
       found = true;
-    } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `surveys/${id}`);
+    } catch (err: any) {
+       console.error(`⚠️ Fallo borrando encuesta en Firebase (${id}):`, err.message);
     }
   }
   
@@ -491,8 +491,8 @@ export async function getResponsesForSurvey(surveyId: string): Promise<any[]> {
       });
       console.log(`📡 [FIREBASE DATA] Extraídas ${list.length} respuestas de la encuesta origen ${surveyId}.`);
       return list;
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, `responses?surveyId=${surveyId}`);
+    } catch (err: any) {
+       console.error(`⚠️ Fallo leyendo respuestas de Firebase (${surveyId}). Fallback Local:`, err.message);
     }
   }
   return localResponses.filter(r => r.surveyId === surveyId);
@@ -511,13 +511,34 @@ export async function saveResponse(surveyId: string, answers: any): Promise<bool
     try {
       const docRef = doc(db, "responses", responseId);
       await setDoc(docRef, responseData);
-    } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, `responses/${responseId}`);
+    } catch (err: any) {
+        console.error(`⚠️ Fallo escribiendo respuesta en Firebase (${responseId}):`, err.message);
     }
   }
   localResponses.push(responseData);
   await saveLocalDiskData();
   return true;
+}
+
+export async function deleteResponse(responseId: string): Promise<boolean> {
+  let found = false;
+  if (isFirebaseConnected() && db) {
+    try {
+      await deleteDoc(doc(db, "responses", responseId));
+      found = true;
+    } catch (err: any) {
+       console.error(`⚠️ Fallo borrando respuesta en Firebase (${responseId}):`, err.message);
+    }
+  }
+  
+  const initialLength = localResponses.length;
+  localResponses = localResponses.filter(r => r.id !== responseId);
+  if (localResponses.length < initialLength) {
+    found = true;
+    await saveLocalDiskData();
+  }
+  
+  return found;
 }
 
 export async function getResponseCount(surveyId: string): Promise<number> {

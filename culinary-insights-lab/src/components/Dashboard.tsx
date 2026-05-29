@@ -14,6 +14,8 @@ export default function Dashboard() {
   const [surveyTitle, setSurveyTitle] = useState("Resultados de Encuesta");
   const [surveyData, setSurveyData] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [apiProvider, setApiProvider] = useState<"gemini" | "groq" | "openrouter">("gemini");
+  const [apiModel, setApiModel] = useState<string>("");
   
   // Selected question ID to inspect
   const [activeQuestionId, setActiveQuestionId] = useState<string>("");
@@ -100,7 +102,7 @@ export default function Dashboard() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ surveyId, data: filteredResponses })
+        body: JSON.stringify({ surveyId, data: filteredResponses, apiProvider, model: apiModel })
       });
       const json = await res.json();
       if (json.analysis) {
@@ -875,10 +877,10 @@ export default function Dashboard() {
                 <div className="flex-1">
                     <h3 className="text-gray-900 font-bold text-base mb-1.5 flex items-center gap-2">
                         <Sparkles size={18} className="text-primary" />
-                        Diagnóstico & Síntesis IA (Gemini)
+                        Diagnóstico & Síntesis IA Avanzada
                     </h3>
                     <p className="text-gray-600 text-xs mb-4 leading-relaxed">
-                        Analiza e interpreta semánticamente todas las respuestas recolectadas para este formulario.
+                        Analiza e interpreta semánticamente todas las respuestas recolectadas. Puedes elegir distintos modelos avanzados (requiere que las APIs estén configuradas en las variables de entorno).
                     </p>
                     
                     {aiAnalysis ? (
@@ -894,17 +896,61 @@ export default function Dashboard() {
                     )}
                 </div>
                 
-                <button 
-                    onClick={requestAnalysis}
-                    disabled={analyzing || responses.length === 0}
-                    className="shrink-0 bg-white border border-primary text-primary hover:bg-primary hover:text-white px-5 py-2.5 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm flex items-center gap-2"
-                >
-                    {analyzing ? (
-                        <>Procesando <RefreshCw size={14} className="animate-spin" /></>
-                    ) : (
-                        <><Sparkles size={14} /> Analizar Todo</>
+                <div className="flex flex-col gap-3 shrink-0 min-w-[220px]">
+                  <div className="flex flex-col gap-2 bg-white p-4 rounded-lg border border-primary/10 shadow-sm">
+                    <label className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Motor de Análisis</label>
+                    <select
+                      value={apiProvider}
+                      onChange={(e) => {
+                         setApiProvider(e.target.value as any);
+                         setApiModel(""); 
+                      }}
+                      className="text-sm bg-gray-50 border border-gray-200 text-gray-700 rounded-md p-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary w-full"
+                    >
+                      <option value="gemini">Gemini (Por defecto)</option>
+                      <option value="groq">Groq</option>
+                      <option value="openrouter">OpenRouter</option>
+                    </select>
+
+                    {apiProvider === "groq" && (
+                        <select
+                           value={apiModel}
+                           onChange={(e) => setApiModel(e.target.value)}
+                           className="text-sm bg-gray-50 border border-gray-200 text-gray-700 rounded-md p-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary mt-1 w-full"
+                        >
+                          <option value="">Llama 3 70B (Defecto)</option>
+                          <option value="llama3-8b-8192">Llama 3 8B</option>
+                          <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+                          <option value="gemma-7b-it">Gemma 7B</option>
+                        </select>
                     )}
-                </button>
+
+                    {apiProvider === "openrouter" && (
+                        <select
+                           value={apiModel}
+                           onChange={(e) => setApiModel(e.target.value)}
+                           className="text-sm bg-gray-50 border border-gray-200 text-gray-700 rounded-md p-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary mt-1 w-full"
+                        >
+                          <option value="">Claude 3.5 Sonnet (Defecto)</option>
+                          <option value="anthropic/claude-3-haiku">Claude 3 Haiku</option>
+                          <option value="meta-llama/llama-3-8b-instruct">Llama 3 8B Instruct</option>
+                          <option value="google/gemini-flash-1.5">Gemini 1.5 Flash</option>
+                        </select>
+                    )}
+                  </div>
+                  
+                  <button 
+                      onClick={requestAnalysis}
+                      disabled={analyzing || responses.length === 0}
+                      className="bg-white border border-primary text-primary hover:bg-primary hover:text-white px-5 py-3 rounded-lg font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-sm flex justify-center items-center gap-2 w-full"
+                  >
+                      {analyzing ? (
+                          <>Procesando <RefreshCw size={14} className="animate-spin" /></>
+                      ) : (
+                          <><Sparkles size={14} /> Analizar Todo</>
+                      )}
+                  </button>
+                </div>
             </div>
         </div>
       </div>

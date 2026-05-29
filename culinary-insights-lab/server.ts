@@ -224,12 +224,8 @@ app.delete("/api/responses/:id", async (req, res) => {
 
 // AI COGNITIVE AGENT ANALYSIS
 app.post("/api/analyze", async (req, res) => {
-  if (!ai) {
-    res.status(500).json({ error: "Falta GEMINI_API_KEY en las variables de entorno." });
-    return;
-  }
   try {
-     const { surveyId, data } = req.body;
+     const { surveyId, data, apiProvider = "gemini", model = "" } = req.body;
      const survey = await getSurveyById(surveyId);
      
      const prompt = `
@@ -256,14 +252,59 @@ app.post("/api/analyze", async (req, res) => {
      
      Maneja un tono objetivo, académico, y enfocado en la toma de decisiones. Cita porcentajes o conteos específicos para respaldar tus afirmaciones. No inventes datos que no estén en "Resultados Consolidados".
      `;
-     
-     const response = await ai.models.generateContent({ 
-        model: "gemini-2.5-pro", 
+
+    let analysisResult = "";
+
+    if (apiProvider === "groq") {
+      const groqKey = process.env.GROQ_API_KEY;
+      if (!groqKey) throw new Error("Falta GROQ_API_KEY en las variables de entorno.");
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${groqKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: model || "llama3-70b-8192", 
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const groqData = await response.json();
+      if (groqData.error) throw new Error(groqData.error.message || JSON.stringify(groqData.error));
+      analysisResult = groqData.choices[0].message.content;
+      
+    } else if (apiProvider === "openrouter") {
+      const orKey = process.env.OPENROUTER_API_KEY;
+      if (!orKey) throw new Error("Falta OPENROUTER_API_KEY en las variables de entorno.");
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${orKey}`,
+          "HTTP-Referer": "https://ai.studio", 
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model: model || "anthropic/claude-3.5-sonnet",
+          messages: [{ role: "user", content: prompt }]
+        })
+      });
+      const orData = await response.json();
+      if (orData.error) throw new Error(orData.error.message || JSON.stringify(orData.error));
+      analysisResult = orData.choices[0].message.content;
+      
+    } else {
+      // Default to Gemini
+      if (!ai) throw new Error("Falta GEMINI_API_KEY en las variables de entorno.");
+      const response = await ai.models.generateContent({ 
+        model: model || "gemini-2.5-pro", 
         contents: prompt 
-     });
+      });
+      analysisResult = response.text;
+    }
      
-     res.json({ analysis: response.text });
+    res.json({ analysis: analysisResult });
   } catch (err: any) {
+     console.error("Analysis Error:", err);
      res.status(500).json({ error: err.message });
   }
 });

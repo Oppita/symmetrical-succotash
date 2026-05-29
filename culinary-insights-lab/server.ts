@@ -27,11 +27,12 @@ const app = express();
 
 app.use(express.json());
 
-const ai = process.env.GEMINI_API_KEY
-  ? new GoogleGenAI({
-      apiKey: process.env.GEMINI_API_KEY
-    })
-  : null;
+const getAI = () => {
+  if (process.env.GEMINI_API_KEY) {
+    return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return null;
+};
 
 // =========================
 // DB STATUS
@@ -386,12 +387,13 @@ Usa Markdown profesional.
         throw new Error("Missing GEMINI_API_KEY");
       }
 
+      const ai = getAI();
       if (!ai) {
         throw new Error("Gemini client not initialized");
       }
 
       const response = await ai.models.generateContent({
-        model: model || "gemini-2.5-flash",
+        model: model || "gemini-2.0-flash",
         contents: prompt
       });
 
@@ -504,6 +506,7 @@ app.post("/api/semantically-cluster-specs", async (req, res) => {
       });
     }
 
+    const ai = getAI();
     if (!ai) {
       return res.json({
         clusters: []
@@ -519,7 +522,7 @@ Devuelve JSON.
 `;
 
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.0-flash",
       contents: prompt,
       config: {
         responseMimeType: "application/json",

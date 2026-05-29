@@ -233,14 +233,32 @@ app.post("/api/analyze", async (req, res) => {
      const survey = await getSurveyById(surveyId);
      
      const prompt = `
-     Analiza los siguientes resultados de una encuesta. 
-     Cuestionario Base: ${JSON.stringify(survey)}. 
-     Resultados Consolidados: ${JSON.stringify(data)}. 
-     Instrucción: Escribe un breve párrafo resumiendo el patrón principal encontrado de manera profesional y clara.
+     Actúa como un experto investigador en estadística y análisis de datos. 
+     Analiza meticulosamente los siguientes resultados de una encuesta. 
+     
+     Cuestionario Base:
+     ${JSON.stringify(survey)}
+     
+     Resultados Consolidados:
+     ${JSON.stringify(data)}
+     
+     Instrucción:
+     Escribe un reporte analítico detallado, estructurado y supremamente riguroso basado EXCLUSIVAMENTE en los datos provistos.
+     Utiliza formato Markdown para estructurar el reporte de forma profesional.
+     
+     El reporte debe contener OBLIGATORIAMENTE la siguiente estructura:
+     1. **Resumen Ejecutivo**: Una visión de alto nivel de los hallazgos más críticos.
+     2. **Análisis Descriptivo**: Desglose sistemático de tendencias métricas clave para cada pregunta, destacando mayorías, minorías, y dispersión de datos.
+     3. **Hallazgos Cualitativos**: Si hay respuestas abiertas (texto), sintetiza el sentimiento general, patrones semánticos y perspectivas clave ocultas en el texto.
+     4. **Cruces de Variables y Correlaciones Potenciales**: Si es posible identificar relaciones entre diferentes preguntas (ej. un grupo demográfico específico prefiere cierta opción), descríbelo analíticamente.
+     5. **Conclusiones Estratégicas**: Deducciones lógicas derivadas de los datos.
+     6. **Recomendaciones de Acción**: Acciones tácticas claras basadas en las conclusiones.
+     
+     Maneja un tono objetivo, académico, y enfocado en la toma de decisiones. Cita porcentajes o conteos específicos para respaldar tus afirmaciones. No inventes datos que no estén en "Resultados Consolidados".
      `;
      
      const response = await ai.models.generateContent({ 
-        model: "gemini-2.5-flash", 
+        model: "gemini-2.5-pro", 
         contents: prompt 
      });
      

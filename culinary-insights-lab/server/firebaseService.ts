@@ -369,16 +369,17 @@ export async function dbInit() {
       isFirebaseEnabled = true;
       console.log("🔥 [AUTH] Autenticación a Firebase Firestore establecida. (Proyecto: " + projectId + ")");
       
-      // Auto-update standard surveys to Firestore to ensure boundaries and labels are current
-      try {
-        for (const surveyId of Object.keys(localSurveys)) {
+      // Auto-update standard surveys asynchronously to prevent blocking startup
+      Promise.all(
+        Object.keys(localSurveys).map((surveyId) => {
           const docRef = doc(db, "surveys", surveyId);
-          await setDoc(docRef, localSurveys[surveyId]);
-        }
+          return setDoc(docRef, localSurveys[surveyId]);
+        })
+      ).then(() => {
         console.log("⚡ Encuestas estándar sincronizadas con Firebase Firestore.");
-      } catch (writeErr: any) {
-        console.error("⚠️ Error grabando encuestas iniciales en Firestore (posible problema de permisos). Continuando conexión con Firestore:", writeErr.message);
-      }
+      }).catch((writeErr: any) => {
+        console.error("⚠️ Error grabando encuestas iniciales en Firestore:", writeErr.message);
+      });
     } catch (err) {
       console.error("⚠️ Falló la conexión inicial a Firebase. Utilizando fallback local:", err);
       isFirebaseEnabled = false;

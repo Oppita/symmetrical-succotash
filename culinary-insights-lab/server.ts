@@ -12,6 +12,7 @@ import {
   deleteSurvey,
   getResponsesForSurvey,
   saveResponse,
+  deleteResponse,
   getResponseCount,
   syncDatabase,
   getDatabaseStats,
@@ -200,6 +201,22 @@ app.get("/api/survey/:id/results", async (req, res) => {
   try {
     const results = await getResponsesForSurvey(req.params.id);
     res.json(results);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE SURVEY RESPONSE
+app.delete("/api/responses/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const deleted = await deleteResponse(id);
+    if (!deleted) {
+      res.status(404).json({ error: "Respuesta no encontrada" });
+      return;
+    }
+    console.log(`DELETE /api/responses/${id} completed successfully`);
+    res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

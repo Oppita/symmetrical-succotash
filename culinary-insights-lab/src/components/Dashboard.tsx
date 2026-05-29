@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { QRCodeCanvas } from "qrcode.react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { RefreshCw, Sparkles, QrCode, ArrowLeft, Share2, Download, Upload, List, MessageSquare, Award, Edit2, Check, ExternalLink, ShieldCheck, Users } from "lucide-react";
+import { RefreshCw, Sparkles, QrCode, ArrowLeft, Share2, Download, Upload, List, MessageSquare, Award, Edit2, Check, ExternalLink, ShieldCheck, Users, Trash2 } from "lucide-react";
 
 export default function Dashboard() {
   const { id } = useParams();
@@ -492,6 +492,24 @@ export default function Dashboard() {
     document.body.removeChild(downloadLink);
   };
 
+  const handleDeleteResponse = async (responseId: string) => {
+    if (!window.confirm("¿Estás seguro de eliminar este registro? Esta acción no se puede deshacer.")) return;
+    try {
+      const res = await fetch(`/api/responses/${responseId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        alert("Registro eliminado exitosamente.");
+        fetchData();
+      } else {
+        alert("Error al eliminar el registro.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error al conectar con el servidor.");
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto p-6 md:p-12">
       <Link to="/" className="text-gray-500 hover:text-gray-900 flex items-center gap-2 mb-6 font-medium text-sm transition-colors w-fit">
@@ -928,6 +946,7 @@ export default function Dashboard() {
                               <th className="py-3 px-4 font-bold uppercase tracking-wider">Contacto / Correo</th>
                               <th className="py-3 px-4 font-bold uppercase tracking-wider text-center">Autorización Datos</th>
                               <th className="py-3 px-4 font-bold uppercase tracking-wider text-right">Fecha Registro</th>
+                              <th className="py-3 px-4 font-bold uppercase tracking-wider text-center">Acciones</th>
                           </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
@@ -951,6 +970,15 @@ export default function Dashboard() {
                                   </td>
                                   <td className="py-3.5 px-4 text-right text-gray-400 font-medium font-mono">
                                       {resp.timestamp}
+                                  </td>
+                                  <td className="py-3.5 px-4 text-center">
+                                      <button
+                                          onClick={() => handleDeleteResponse(resp.id)}
+                                          className="text-red-400 hover:text-red-600 transition-colors bg-red-50 hover:bg-red-100 p-2 rounded-full"
+                                          title="Eliminar Registro"
+                                      >
+                                          <Trash2 size={14} />
+                                      </button>
                                   </td>
                               </tr>
                           ))}
